@@ -1,20 +1,24 @@
-// app/(tabs)/index.tsx - УПРОЩЕННЫЙ ВАРИАНТ
-import { useEffect, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Link } from 'expo-router';
+// app/(tabs)/index.tsx - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ ДУБЛИРУЮЩИХСЯ ТАБОВ
 import HippoView from '@/components/HippoView';
 import StatBar from '@/components/StatBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useHippo } from '@/context/HippoContext';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useHippo } from '@/context/HippoContext';
+import { Link } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const { hippo } = useHippo();
 
-  // Временное состояние для имени из localStorage
+  // Состояние для принудительного обновления
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Временное состояние для имени
   const [hippoName, setHippoName] = useState('Hippo');
 
+  // Загружаем имя при монтировании и при изменении hippo
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedName = localStorage.getItem('hippoName');
@@ -22,9 +26,9 @@ export default function HomeScreen() {
         setHippoName(savedName);
       }
     }
-  }, []);
+  }, [hippo]);
 
-  const getHippoMood = () => {
+  const getHippoMood = useCallback(() => {
     if (!hippo) return 'happy';
     const { happiness, hunger, energy, cleanliness } = hippo.stats;
 
@@ -33,34 +37,60 @@ export default function HomeScreen() {
     if (cleanliness < 30) return 'dirty';
     if (happiness < 40) return 'sad';
     return 'happy';
-  };
+  }, [hippo]);
 
-  const formatAge = (days: number) => {
+  const formatAge = useCallback((days: number) => {
     if (days < 7) return `${days} day${days !== 1 ? 's' : ''}`;
     const weeks = Math.floor(days / 7);
     return `${weeks} week${weeks !== 1 ? 's' : ''}`;
-  };
+  }, []);
 
   // Простые функции навигации
-  const navigateTo = (path: string) => {
+  const navigateTo = useCallback((path: string) => {
     if (typeof window !== 'undefined') {
       window.location.href = path;
     }
-  };
+  }, []);
+
+  // Функция для обновления страницы
+  const refreshPage = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
+  // Функция для сброса гиппопотама
+  const handleResetHippo = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      if (confirm('Are you sure you want to reset your hippo? This will delete all progress.')) {
+        localStorage.removeItem('hippoName');
+        localStorage.removeItem('hippoStats');
+        localStorage.removeItem('hasCreatedHippo');
+        window.location.href = '/onboarding';
+      }
+    }
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header */}
+      {/* Скрытый элемент для отслеживания обновлений */}
+      <View style={{ display: 'none' }}>{refreshKey}</View>
+
+      {/* Header с кнопкой обновления */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <ThemedText type="title">{hippoName}</ThemedText>
           <ThemedText style={styles.age}>
             Age: {hippo ? formatAge(hippo.age) : '1 day'}
           </ThemedText>
         </View>
-        <Link href="/modal">
-          <ThemedText type="link">Settings</ThemedText>
-        </Link>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={refreshPage} style={styles.refreshButton}>
+            <IconSymbol name="arrow.clockwise" size={20} color="#4A90E2" />
+            <ThemedText style={styles.refreshText}>Refresh</ThemedText>
+          </TouchableOpacity>
+          <Link href="/modal">
+            <ThemedText type="link">Settings</ThemedText>
+          </Link>
+        </View>
       </View>
 
       {/* Hippo Display */}
@@ -72,27 +102,50 @@ export default function HomeScreen() {
           Stats
         </ThemedText>
 
-        {hippo && (
+        {hippo ? (
           <>
-            <StatBar label="Health" value={Math.round(hippo.stats.health)} color="#4CAF50" />
-            <StatBar label="Hunger" value={Math.round(hippo.stats.hunger)} color="#FF9800" />
-            <StatBar label="Happiness" value={Math.round(hippo.stats.happiness)} color="#E91E63" />
-            <StatBar label="Cleanliness" value={Math.round(hippo.stats.cleanliness)} color="#2196F3" />
-            <StatBar label="Energy" value={Math.round(hippo.stats.energy)} color="#9C27B0" />
+            <StatBar
+              label="Health"
+              value={Math.round(hippo.stats.health)}
+              color="#4CAF50"
+              key={`health-${hippo.stats.health}-${refreshKey}`}
+            />
+            <StatBar
+              label="Hunger"
+              value={Math.round(hippo.stats.hunger)}
+              color="#FF9800"
+              key={`hunger-${hippo.stats.hunger}-${refreshKey}`}
+            />
+            <StatBar
+              label="Happiness"
+              value={Math.round(hippo.stats.happiness)}
+              color="#E91E63"
+              key={`happiness-${hippo.stats.happiness}-${refreshKey}`}
+            />
+            <StatBar
+              label="Cleanliness"
+              value={Math.round(hippo.stats.cleanliness)}
+              color="#2196F3"
+              key={`cleanliness-${hippo.stats.cleanliness}-${refreshKey}`}
+            />
+            <StatBar
+              label="Energy"
+              value={Math.round(hippo.stats.energy)}
+              color="#9C27B0"
+              key={`energy-${hippo.stats.energy}-${refreshKey}`}
+            />
           </>
-        )}
-
-        {!hippo && (
+        ) : (
           <ThemedText style={styles.noStats}>
             No hippo stats available. Create a hippo first!
           </ThemedText>
         )}
       </ThemedView>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - ТОЛЬКО ЭТИ 3 КНОПКИ */}
       <View style={styles.quickActions}>
         <ThemedText type="subtitle" style={styles.actionsTitle}>
-          Quick Actions
+          Navigation
         </ThemedText>
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -101,6 +154,7 @@ export default function HomeScreen() {
           >
             <IconSymbol name="heart.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Care</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Feed, Clean, Play</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -109,6 +163,7 @@ export default function HomeScreen() {
           >
             <IconSymbol name="cart.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Shop</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Buy items</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -117,66 +172,35 @@ export default function HomeScreen() {
           >
             <IconSymbol name="chart.bar.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Stats</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Progress</ThemedText>
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Табы навигации */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, styles.activeTab]}
-          onPress={() => navigateTo('/(tabs)')}
-        >
-          <IconSymbol name="house.fill" size={24} color="#4A90E2" />
-          <ThemedText style={[styles.tabText, styles.activeTabText]}>
-            Home
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/care')}
-        >
-          <IconSymbol name="heart.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Care</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/shop')}
-        >
-          <IconSymbol name="cart.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Shop</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/stats')}
-        >
-          <IconSymbol name="chart.bar.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Stats</ThemedText>
-        </TouchableOpacity>
       </View>
 
       {/* Tips */}
       <View style={styles.tips}>
         <ThemedText style={styles.tipTitle}>💡 Tips:</ThemedText>
         <ThemedText style={styles.tip}>
-          • Check the <ThemedText style={styles.bold}>Care tab</ThemedText> regularly
+          • Go to <ThemedText style={styles.bold}>Care</ThemedText> to feed, clean, play with, and put your hippo to sleep
         </ThemedText>
         <ThemedText style={styles.tip}>
           • Keep all stats above 30% for a happy hippo
         </ThemedText>
         <ThemedText style={styles.tip}>
-          • Low energy? Try the <ThemedText style={styles.bold}>Sleep</ThemedText> action
+          • Low energy? Try the <ThemedText style={styles.bold}>Sleep</ThemedText> action in Care
         </ThemedText>
       </View>
 
       {/* Links */}
       <View style={styles.links}>
-        <Link href="/onboarding">
-          <ThemedText type="link">Edit Hippo Name</ThemedText>
-        </Link>
+        <View style={styles.linkGroup}>
+          <Link href="/onboarding">
+            <ThemedText type="link">Edit Name</ThemedText>
+          </Link>
+          <TouchableOpacity onPress={handleResetHippo}>
+            <ThemedText type="link" style={styles.resetLink}>Reset Hippo</ThemedText>
+          </TouchableOpacity>
+        </View>
         <ThemedText style={styles.version}>Hippo Tamagotchi v1.0</ThemedText>
       </View>
     </ThemedView>
@@ -193,6 +217,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 20,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 6,
+  },
+  refreshText: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   age: {
     fontSize: 14,
@@ -214,11 +260,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   quickActions: {
-    marginTop: 25,
+    marginTop: 30,
     marginBottom: 30,
   },
   actionsTitle: {
     marginBottom: 15,
+    textAlign: 'center',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -228,10 +275,11 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: '#4CAF50',
     borderRadius: 12,
-    padding: 15,
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+    minHeight: 100,
   },
   shopButton: {
     backgroundColor: '#FF9800',
@@ -243,39 +291,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     marginTop: 8,
+    fontSize: 16,
   },
-  // Табы
-  tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: 'white',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  tab: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingVertical: 8,
-  },
-  activeTab: {
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    borderRadius: 8,
-  },
-  tabText: {
+  actionSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 12,
-    marginTop: 4,
-    color: '#718096',
+    marginTop: 2,
+    textAlign: 'center',
   },
-  activeTabText: {
-    color: '#4A90E2',
-    fontWeight: '600',
-  },
+  // УБРАН блок tabsContainer - больше нет дублирующихся табов!
+
   // Остальные стили
   tips: {
     marginTop: 20,
@@ -291,8 +316,9 @@ const styles = StyleSheet.create({
   },
   tip: {
     marginLeft: 10,
-    marginBottom: 4,
+    marginBottom: 6,
     fontSize: 14,
+    lineHeight: 20,
   },
   bold: {
     fontWeight: '600',
@@ -305,6 +331,14 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  linkGroup: {
+    flexDirection: 'row',
+    gap: 15,
+    alignItems: 'center',
+  },
+  resetLink: {
+    color: '#FF5252',
   },
   version: {
     fontSize: 12,

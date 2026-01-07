@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// app/(tabs)/index.tsx - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ ДУБЛИРУЮЩИХСЯ ТАБОВ
 import HippoView from '@/components/HippoView';
 import StatBar from '@/components/StatBar';
 import { ThemedText } from '@/components/themed-text';
@@ -26,7 +26,7 @@ export default function HomeScreen() {
         setHippoName(savedName);
       }
     }
-  }, [hippo]); // Добавляем hippo в зависимости для обновления имени
+  }, [hippo]);
 
   const getHippoMood = useCallback(() => {
     if (!hippo) return 'happy';
@@ -37,7 +37,7 @@ export default function HomeScreen() {
     if (cleanliness < 30) return 'dirty';
     if (happiness < 40) return 'sad';
     return 'happy';
-  }, [hippo]); // Добавляем hippo в зависимости
+  }, [hippo]);
 
   const formatAge = useCallback((days: number) => {
     if (days < 7) return `${days} day${days !== 1 ? 's' : ''}`;
@@ -85,6 +85,7 @@ export default function HomeScreen() {
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={refreshPage} style={styles.refreshButton}>
             <IconSymbol name="arrow.clockwise" size={20} color="#4A90E2" />
+            <ThemedText style={styles.refreshText}>Refresh</ThemedText>
           </TouchableOpacity>
           <Link href="/modal">
             <ThemedText type="link">Settings</ThemedText>
@@ -141,10 +142,10 @@ export default function HomeScreen() {
         )}
       </ThemedView>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - ТОЛЬКО ЭТИ 3 КНОПКИ */}
       <View style={styles.quickActions}>
         <ThemedText type="subtitle" style={styles.actionsTitle}>
-          Quick Actions
+          Navigation
         </ThemedText>
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -153,6 +154,7 @@ export default function HomeScreen() {
           >
             <IconSymbol name="heart.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Care</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Feed, Clean, Play</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -161,6 +163,7 @@ export default function HomeScreen() {
           >
             <IconSymbol name="cart.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Shop</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Buy items</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -169,58 +172,22 @@ export default function HomeScreen() {
           >
             <IconSymbol name="chart.bar.fill" size={28} color="#fff" />
             <ThemedText style={styles.actionText}>Stats</ThemedText>
+            <ThemedText style={styles.actionSubtext}>Progress</ThemedText>
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Табы навигации */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, styles.activeTab]}
-          onPress={() => navigateTo('/(tabs)')}
-        >
-          <IconSymbol name="house.fill" size={24} color="#4A90E2" />
-          <ThemedText style={[styles.tabText, styles.activeTabText]}>
-            Home
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/care')}
-        >
-          <IconSymbol name="heart.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Care</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/shop')}
-        >
-          <IconSymbol name="cart.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Shop</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => navigateTo('/(tabs)/stats')}
-        >
-          <IconSymbol name="chart.bar.fill" size={24} color="#718096" />
-          <ThemedText style={styles.tabText}>Stats</ThemedText>
-        </TouchableOpacity>
       </View>
 
       {/* Tips */}
       <View style={styles.tips}>
         <ThemedText style={styles.tipTitle}>💡 Tips:</ThemedText>
         <ThemedText style={styles.tip}>
-          • Check the <ThemedText style={styles.bold}>Care tab</ThemedText> regularly
+          • Go to <ThemedText style={styles.bold}>Care</ThemedText> to feed, clean, play with, and put your hippo to sleep
         </ThemedText>
         <ThemedText style={styles.tip}>
           • Keep all stats above 30% for a happy hippo
         </ThemedText>
         <ThemedText style={styles.tip}>
-          • Low energy? Try the <ThemedText style={styles.bold}>Sleep</ThemedText> action
+          • Low energy? Try the <ThemedText style={styles.bold}>Sleep</ThemedText> action in Care
         </ThemedText>
       </View>
 
@@ -232,9 +199,6 @@ export default function HomeScreen() {
           </Link>
           <TouchableOpacity onPress={handleResetHippo}>
             <ThemedText type="link" style={styles.resetLink}>Reset Hippo</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={refreshPage}>
-            <ThemedText type="link" style={styles.refreshLink}>↻ Refresh</ThemedText>
           </TouchableOpacity>
         </View>
         <ThemedText style={styles.version}>Hippo Tamagotchi v1.0</ThemedText>
@@ -263,7 +227,18 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   refreshButton: {
-    padding: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 6,
+  },
+  refreshText: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   age: {
     fontSize: 14,
@@ -285,11 +260,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   quickActions: {
-    marginTop: 25,
+    marginTop: 30,
     marginBottom: 30,
   },
   actionsTitle: {
     marginBottom: 15,
+    textAlign: 'center',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -299,10 +275,11 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: '#4CAF50',
     borderRadius: 12,
-    padding: 15,
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+    minHeight: 100,
   },
   shopButton: {
     backgroundColor: '#FF9800',
@@ -314,39 +291,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     marginTop: 8,
+    fontSize: 16,
   },
-  // Табы
-  tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: 'white',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  tab: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingVertical: 8,
-  },
-  activeTab: {
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    borderRadius: 8,
-  },
-  tabText: {
+  actionSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 12,
-    marginTop: 4,
-    color: '#718096',
+    marginTop: 2,
+    textAlign: 'center',
   },
-  activeTabText: {
-    color: '#4A90E2',
-    fontWeight: '600',
-  },
+  // УБРАН блок tabsContainer - больше нет дублирующихся табов!
+
   // Остальные стили
   tips: {
     marginTop: 20,
@@ -362,8 +316,9 @@ const styles = StyleSheet.create({
   },
   tip: {
     marginLeft: 10,
-    marginBottom: 4,
+    marginBottom: 6,
     fontSize: 14,
+    lineHeight: 20,
   },
   bold: {
     fontWeight: '600',
@@ -384,10 +339,6 @@ const styles = StyleSheet.create({
   },
   resetLink: {
     color: '#FF5252',
-  },
-  refreshLink: {
-    color: '#4A90E2',
-    fontWeight: '600',
   },
   version: {
     fontSize: 12,

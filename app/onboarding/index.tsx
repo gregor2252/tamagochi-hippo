@@ -1,33 +1,57 @@
-import { View, Text, StyleSheet } from 'react-native';
+// app/(tabs)/index.tsx - временная версия
+import { Image } from 'expo-image';
+import { Platform, StyleSheet } from 'react-native';
+
+import { HelloWave } from '@/components/hello-wave';
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
 
-export default function OnboardingScreen() {
+export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome!</Text>
-      <Link href="/onboarding/name">
-        <Text style={styles.link}>Go to Name Screen</Text>
-      </Link>
-      <Link href="/(tabs)">
-        <Text style={styles.link}>Skip to App</Text>
-      </Link>
-    </View>
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerImage={
+        <Image
+          source={require('@/assets/images/partial-react-logo.png')}
+          style={styles.reactLogo}
+        />
+      }>
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText type="title">Welcome to Hippo Tamagotchi!</ThemedText>
+        <HelloWave />
+      </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">Your Virtual Hippo Awaits</ThemedText>
+        <ThemedText>
+          Go to the Care tab to feed, clean, play with, and put your hippo to sleep.
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <Link href="/modal">
+          <ThemedText type="link">Open Modal</ThemedText>
+        </Link>
+      </ThemedView>
+    </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
+  titleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
+  stepContainer: {
+    gap: 8,
+    marginBottom: 8,
   },
-  link: {
-    color: 'blue',
-    fontSize: 18,
-    marginVertical: 10,
+  reactLogo: {
+    height: 178,
+    width: 290,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
   },
 });

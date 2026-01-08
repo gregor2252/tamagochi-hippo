@@ -19,15 +19,38 @@ export type HippoStats = {
     thirst: number;
 };
 
-// ДОБАВЛЯЕМ ТИП ПОЛА
 export type HippoGender = 'male' | 'female';
+
+// НОВЫЕ ТИПЫ ДЛЯ ОДЕЖДЫ И МАГАЗИНА
+export type ClothingCategory = 'head' | 'upper' | 'lower' | 'feet';
+
+// В types/hippo.ts в типе ClothingItem добавьте:
+export type ClothingItem = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    category: ClothingCategory;
+    icon: string;
+    rarity: 'common' | 'rare' | 'epic';
+    unlocked: boolean; // Это поле должно быть
+};
+
+export type HippoOutfit = {
+    head?: string; // id предмета
+    upper?: string;
+    lower?: string;
+    feet?: string;
+};
 
 export interface Hippo {
     id: string;
     name: string;
-    gender: HippoGender; // НОВОЕ ПОЛЕ
-    age: number; // в днях
+    gender: HippoGender;
+    age: number;
     stats: HippoStats;
+    outfit: HippoOutfit; // НОВОЕ ПОЛЕ
+    coins: number; // НОВОЕ ПОЛЕ: валюта
     createdAt: Date;
     lastFed?: Date;
     lastCleaned?: Date;
@@ -49,5 +72,11 @@ export interface HippoContextType {
     giveWater: () => void;
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
-    completeOnboarding: (name: string, gender: HippoGender) => void; // ОБНОВЛЯЕМ ФУНКЦИЮ
+    completeOnboarding: (name: string, gender: HippoGender) => void;
+    // НОВЫЕ ФУНКЦИИ ДЛЯ МАГАЗИНА
+    buyItem: (itemId: string) => boolean;
+    equipItem: (itemId: string) => void;
+    unequipItem: (category: ClothingCategory) => void;
+    addCoins: (amount: number) => void;
+    getAvailableItems: () => ClothingItem[];
 }

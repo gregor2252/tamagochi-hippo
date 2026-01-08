@@ -1,11 +1,11 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/index.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ С МОНЕТАМИ
 import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Image, // <-- ДОБАВИТЬ ИМПОРТ
+  Image,
   ImageBackground,
   StyleSheet,
   TouchableOpacity,
@@ -36,14 +36,12 @@ export default function HomeScreen() {
     if (!hippo) return 'happy';
     const { happiness, satiety, energy, cleanliness, thirst } = hippo.stats;
 
-    // Проверяем самые критические состояния
     if (thirst > 80) return 'thirsty';
     if (satiety < 20) return 'hungry';
     if (energy < 15) return 'sleepy';
     if (cleanliness < 25) return 'dirty';
     if (happiness < 30) return 'sad';
 
-    // Все показатели в норме
     return 'happy';
   }, [hippo]);
 
@@ -59,6 +57,9 @@ export default function HomeScreen() {
         localStorage.removeItem('hippoName');
         localStorage.removeItem('hippoStats');
         localStorage.removeItem('hasCreatedHippo');
+        localStorage.removeItem('hippoOutfit');
+        localStorage.removeItem('hippoCoins');
+        localStorage.removeItem('unlockedItems');
         window.location.href = '/onboarding';
       }
     }
@@ -70,6 +71,11 @@ export default function HomeScreen() {
 
       <View style={styles.centerContainer}>
         <ImageBackground source={backgroundImage} style={styles.background}>
+          {/* НОВЫЙ КОНТЕЙНЕР С МОНЕТАМИ В ПРАВОМ ВЕРХНЕМ УГЛУ */}
+          <View style={styles.coinContainer}>
+            <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
+          </View>
+
           <View style={styles.contentWrapper}>
             <View style={styles.header}>
               <ThemedText style={styles.title}>{hippoName}</ThemedText>
@@ -178,11 +184,32 @@ const styles = StyleSheet.create({
   // ===== ЦЕНТРАЛЬНАЯ ОБЛАСТЬ С ФОНОМ =====
   centerContainer: {
     width: '70%',
+    position: 'relative', // Для позиционирования контейнера с монетами
   },
+
   background: {
     flex: 1,
     resizeMode: 'cover',
   },
+
+  // ===== КОНТЕЙНЕР С МОНЕТАМИ =====
+  coinContainer: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+
+  coinText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFD700',
+  },
+
   contentWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -196,6 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -219,11 +247,13 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 8,
   },
+
   buttonWithStats: {
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: 120,
   },
+
   statBarContainer: {
     width: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
@@ -232,10 +262,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
+
   statBar: {
     width: '100%',
     height: '100%',
   },
+
   circleButton: {
     width: 70,
     height: 70,
@@ -248,6 +280,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
+
   buttonImage: {
     width: 70,
     height: 70,
@@ -264,6 +297,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 12,
   },
+
   sideButton: {
     width: '100%',
     paddingVertical: 12,
@@ -275,22 +309,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
+
   sideButtonEmoji: {
     fontSize: 20,
     marginBottom: 4,
   },
+
   sideButtonText: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
+
   sideButtonDivider: {
     width: '80%',
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginVertical: 8,
   },
+
   resetText: {
     color: '#FF5252',
   },

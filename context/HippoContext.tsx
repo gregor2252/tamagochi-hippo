@@ -1,5 +1,6 @@
-// context/HippoContext.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
-import { Hippo, HippoContextType, HippoGender, HippoStats } from '@/types/hippo';
+// context/HippoContext.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ С МАГАЗИНОМ
+import { SHOP_ITEMS } from '@/constants/shop-items';
+import { Hippo, HippoContextType, HippoGender, HippoOutfit, HippoStats } from '@/types/hippo';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 const HippoContext = createContext<HippoContextType | undefined>(undefined);
@@ -19,6 +20,8 @@ const initialHippo: Hippo = {
     gender: 'male',
     age: 1,
     stats: initialStats,
+    outfit: {}, // НОВОЕ: пустой наряд
+    coins: 100, // НОВОЕ: начальные монеты
     createdAt: new Date(),
     lastFed: new Date(),
     lastCleaned: new Date(),
@@ -33,14 +36,19 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const savedName = localStorage.getItem('hippoName');
             const savedGender = localStorage.getItem('hippoGender') as HippoGender | null;
             const savedStats = localStorage.getItem('hippoStats');
+            const savedOutfit = localStorage.getItem('hippoOutfit');
+            const savedCoins = localStorage.getItem('hippoCoins');
 
             if (savedName) {
                 const baseHippo = {
                     ...initialHippo,
                     name: savedName,
                     gender: savedGender || 'male',
-                    lastWatered: new Date()
+                    lastWatered: new Date(),
+                    coins: savedCoins ? parseInt(savedCoins) : initialHippo.coins,
+                    outfit: savedOutfit ? JSON.parse(savedOutfit) : {}
                 };
+
                 if (savedStats) {
                     try {
                         const parsedStats = JSON.parse(savedStats);
@@ -58,29 +66,33 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         return initialHippo;
     });
 
+    // Загружаем разблокированные предметы
+    const [unlockedItems, setUnlockedItems] = useState<Set<string>>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('unlockedItems');
+            return saved ? new Set(JSON.parse(saved)) : new Set();
+        }
+        return new Set();
+    });
+
     // Синхронизация с localStorage при изменениях
     useEffect(() => {
         const handleStorageChange = () => {
             if (typeof window !== 'undefined') {
                 const savedName = localStorage.getItem('hippoName');
                 const savedGender = localStorage.getItem('hippoGender') as HippoGender | null;
-
                 setHippo(prev => {
                     if (!prev) return prev;
-
                     let updated = false;
                     const updates: Partial<Hippo> = {};
-
                     if (savedName && prev.name !== savedName) {
                         updates.name = savedName;
                         updated = true;
                     }
-
                     if (savedGender && prev.gender !== savedGender) {
                         updates.gender = savedGender;
                         updated = true;
                     }
-
                     return updated ? { ...prev, ...updates } : prev;
                 });
             }
@@ -88,15 +100,20 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
         if (typeof window !== 'undefined') {
             window.addEventListener('storage', handleStorageChange);
-
             const interval = setInterval(handleStorageChange, 1000);
-
             return () => {
                 window.removeEventListener('storage', handleStorageChange);
                 clearInterval(interval);
             };
         }
     }, []);
+
+    // Сохраняем разблокированные предметы
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('unlockedItems', JSON.stringify(Array.from(unlockedItems)));
+        }
+    }, [unlockedItems]);
 
     // Функция обновления статистики
     const updateStats = useCallback((newStats: Partial<HippoStats>) => {
@@ -110,6 +127,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 energy: Math.max(0, Math.min(100, newStats.energy ?? prev.stats.energy)),
                 thirst: Math.max(0, Math.min(100, newStats.thirst ?? prev.stats.thirst)),
             };
+
             const updatedHippo = {
                 ...prev,
                 stats: updatedStats,
@@ -118,6 +136,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 lastPlayed: newStats.happiness !== undefined ? new Date() : prev.lastPlayed,
                 lastWatered: newStats.thirst !== undefined ? new Date() : prev.lastWatered,
             };
+
             if (typeof window !== 'undefined') {
                 localStorage.setItem('hippoStats', JSON.stringify(updatedStats));
             }
@@ -169,6 +188,105 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         });
     }, [hippo?.stats, updateStats]);
 
+    // НОВЫЕ ФУНКЦИИ ДЛЯ МАГАЗИНА
+
+    // Покупка предмета
+    const buyItem = useCallback((itemId: string): boolean => {
+        const item = SHOP_ITEMS.find(i => i.id === itemId);
+        if (!item || !hippo) return false;
+
+        if (hippo.coins >= item.price) {
+            // Вычитаем монеты
+            setHippo(prev => {
+                if (!prev) return prev;
+                const updated = {
+                    ...prev,
+                    coins: prev.coins - item.price
+                };
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('hippoCoins', updated.coins.toString());
+                }
+                return updated;
+            });
+
+            // Разблокируем предмет
+            setUnlockedItems(prev => new Set([...prev, itemId]));
+
+            // Автоматически надеваем, если слот свободен
+            const currentOutfit = hippo.outfit || {};
+            if (!currentOutfit[item.category]) {
+                equipItem(itemId);
+            }
+
+            return true;
+        }
+        return false;
+    }, [hippo]);
+
+    // Надевание предмета
+    const equipItem = useCallback((itemId: string) => {
+        const item = SHOP_ITEMS.find(i => i.id === itemId);
+        if (!item || !hippo || !unlockedItems.has(itemId)) return;
+
+        setHippo(prev => {
+            if (!prev) return prev;
+            const updatedOutfit = {
+                ...prev.outfit,
+                [item.category]: itemId
+            };
+            const updated = {
+                ...prev,
+                outfit: updatedOutfit
+            };
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('hippoOutfit', JSON.stringify(updatedOutfit));
+            }
+            return updated;
+        });
+    }, [hippo, unlockedItems]);
+
+    // Снятие предмета
+    const unequipItem = useCallback((category: keyof HippoOutfit) => {
+        if (!hippo) return;
+
+        setHippo(prev => {
+            if (!prev) return prev;
+            const updatedOutfit = { ...prev.outfit };
+            delete updatedOutfit[category];
+            const updated = {
+                ...prev,
+                outfit: updatedOutfit
+            };
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('hippoOutfit', JSON.stringify(updatedOutfit));
+            }
+            return updated;
+        });
+    }, [hippo]);
+
+    // Добавление монет (можно вызывать за выполнение действий)
+    const addCoins = useCallback((amount: number) => {
+        setHippo(prev => {
+            if (!prev) return prev;
+            const updated = {
+                ...prev,
+                coins: prev.coins + amount
+            };
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('hippoCoins', updated.coins.toString());
+            }
+            return updated;
+        });
+    }, []);
+
+    // Получение доступных предметов (учитывая разблокированные)
+    const getAvailableItems = useCallback(() => {
+        return SHOP_ITEMS.map(item => ({
+            ...item,
+            unlocked: unlockedItems.has(item.id)
+        }));
+    }, [unlockedItems]);
+
     // Автоматическое ухудшение статистики
     useEffect(() => {
         const interval = setInterval(() => {
@@ -182,20 +300,37 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     energy: Math.min(100, prev.stats.energy + 0.1),
                     thirst: Math.min(100, prev.stats.thirst + 0.25),
                 };
+
                 if (updatedStats.thirst > 80) {
                     updatedStats.health = Math.max(0, updatedStats.health - 0.3);
                     updatedStats.happiness = Math.max(0, updatedStats.happiness - 0.2);
                 }
+
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('hippoStats', JSON.stringify(updatedStats));
                 }
+
                 return {
                     ...prev,
                     stats: updatedStats,
                 };
             });
         }, 30000);
+
         return () => clearInterval(interval);
+    }, []);
+
+    // Добавляем монеты за действия
+    useEffect(() => {
+        const actionCoins = {
+            feed: 5,
+            clean: 5,
+            play: 10,
+            sleep: 3,
+            giveWater: 4
+        };
+
+        // Можно добавить логику начисления монет здесь
     }, []);
 
     // Функция завершения онбординга
@@ -221,7 +356,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         });
     }, []);
 
-    // Вычисляем hasCompletedOnboarding как boolean значение
+    // Вычисляем hasCompletedOnboarding
     const hasCompletedOnboarding = (() => {
         if (typeof window !== 'undefined') {
             const hasCreated = localStorage.getItem('hasCreatedHippo') === 'true';
@@ -239,6 +374,8 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 localStorage.setItem('hippoName', newHippo.name);
                 localStorage.setItem('hippoGender', newHippo.gender);
                 localStorage.setItem('hippoStats', JSON.stringify(newHippo.stats));
+                localStorage.setItem('hippoOutfit', JSON.stringify(newHippo.outfit || {}));
+                localStorage.setItem('hippoCoins', newHippo.coins.toString());
             }
         },
         updateStats,
@@ -249,15 +386,25 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         giveWater,
         resetHippo: () => {
             setHippo(initialHippo);
+            setUnlockedItems(new Set());
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('hippoStats');
                 localStorage.removeItem('hippoName');
                 localStorage.removeItem('hippoGender');
                 localStorage.removeItem('hasCreatedHippo');
+                localStorage.removeItem('hippoOutfit');
+                localStorage.removeItem('hippoCoins');
+                localStorage.removeItem('unlockedItems');
             }
         },
-        hasCompletedOnboarding, // теперь это boolean, а не функция
+        hasCompletedOnboarding,
         completeOnboarding,
+        // НОВЫЕ ФУНКЦИИ
+        buyItem,
+        equipItem,
+        unequipItem,
+        addCoins,
+        getAvailableItems,
     };
 
     return (

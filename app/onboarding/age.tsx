@@ -64,7 +64,7 @@ export default function AgeScreen() {
             styles.ageText,
             age === 'parent' && styles.ageTextSelected
           ]}>
-            Родитель
+            Взрослый
           </Text>
         </TouchableOpacity>
       </View>
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ageButton: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 140,
     paddingVertical: 20,
     paddingHorizontal: 20,
     backgroundColor: '#fff',

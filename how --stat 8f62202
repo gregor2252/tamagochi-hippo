@@ -1,0 +1,13 @@
+[33mcommit 8f622029ed8472807e3b0c3820402fab10560cd2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/onboarding-age-and-models[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmy-feature-branch[m[33m, [m[1;32mmain[m[33m)[m
+Author: markushe <magerbov@bk.ru>
+Date:   Sat Jan 10 18:39:50 2026 +0300
+
+    add hippos + fon + menu
+
+app/onboarding/age.tsx
+models/baby/bath/bath.png
+models/baby/default.png
+models/baby/entertainment/entertainment.png
+models/baby/hunger/hunger.png
+models/baby/sleep/sleep.png
+models/baby/water/water.png

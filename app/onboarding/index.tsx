@@ -1,48 +1,78 @@
-// app/onboarding/index.tsx - ОБНОВЛЕННАЯ ВЕРСИЯ
-import { storage } from '@/utils/storage';
+// app/onboarding/index.tsx - ВЫБОР ПОЛА
 import { useRouter } from 'expo-router';
-import { Alert, Button, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+type Gender = 'male' | 'female' | '';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const [gender, setGender] = useState<Gender>('');
 
-  const handleGetStarted = () => {
-    router.push('/onboarding/name');
+  const handleGenderSelect = (selectedGender: Gender) => {
+    setGender(selectedGender);
   };
 
-  const handleSkip = async () => {
-    try {
-      await storage.setItem('hippoName', 'Бегемотик');
-      await storage.setItem('hippoGender', 'male');
-      await storage.setItem('hasCreatedHippo', 'true');
-      router.push('/(tabs)');
-    } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось сохранить данные');
+  const handleContinue = () => {
+    if (!gender) {
+      return;
     }
+
+    // Сохраняем выбранный пол
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hippoGender', gender);
+    }
+
+    // Переходим к выбору возраста
+    router.push('/onboarding/age');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Добро пожаловать! 🦛</Text>
-      <Text style={styles.subtitle}>
-        Ваше путешествие с виртуальным бегемотиком начинается!
-      </Text>
-      <Text style={styles.description}>
-        Создайте своего уникального бегемотика, выберите имя и пол.
-        Кормите, мойте, играйте и ухаживайте за ним, чтобы он был счастлив и здоров.
-      </Text>
+      <Text style={styles.title}>Выберите пол бегемотика</Text>
+
       <View style={styles.buttonContainer}>
-        <Button
-          title="Начать →"
-          onPress={handleGetStarted}
-          color="#4A90E2"
-        />
+        <TouchableOpacity
+          style={[
+            styles.genderButton,
+            gender === 'male' && styles.genderButtonSelected,
+          ]}
+          onPress={() => handleGenderSelect('male')}
+        >
+          <Text style={styles.genderEmoji}>♂️</Text>
+          <Text style={[
+            styles.genderText,
+            gender === 'male' && styles.genderTextSelected
+          ]}>
+            Мужской
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.genderButton,
+            gender === 'female' && styles.genderButtonSelected,
+          ]}
+          onPress={() => handleGenderSelect('female')}
+        >
+          <Text style={styles.genderEmoji}>♀️</Text>
+          <Text style={[
+            styles.genderText,
+            gender === 'female' && styles.genderTextSelected
+          ]}>
+            Женский
+          </Text>
+        </TouchableOpacity>
       </View>
-      <Button
-        title="Пропустить"
-        onPress={handleSkip}
-        color="#666"
-      />
+
+      {gender && (
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+        >
+          <Text style={styles.continueButtonText}>Продолжить →</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -53,30 +83,76 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
-    backgroundColor: '#E6F4FE',
+    backgroundColor: '#D9D0C5',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#1D3D47',
-  },
-  subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 15,
-    color: '#4A5568',
-  },
-  description: {
-    fontSize: 16,
-    textAlign: 'center',
     marginBottom: 40,
-    color: '#718096',
-    lineHeight: 22,
+    color: '#1a1a1a',
   },
   buttonContainer: {
     width: '100%',
-    marginBottom: 15,
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 30,
+    justifyContent: 'center',
+  },
+  genderButton: {
+    width: 140,
+    height: 140,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    borderWidth: 3,
+    borderColor: '#A65437',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  genderButtonSelected: {
+    backgroundColor: '#A65437',
+    shadowColor: '#A65437',
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  genderEmoji: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  genderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#A65437',
+    textAlign: 'center',
+  },
+  genderTextSelected: {
+    color: '#fff',
+  },
+  continueButton: {
+    width: '100%',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    backgroundColor: '#A65437',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

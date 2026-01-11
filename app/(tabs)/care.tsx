@@ -1,47 +1,87 @@
-// app/(tabs)/care.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// app/(tabs)/care.tsx - ВЕРСИЯ С МИНИ-ИГРОЙ
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Alert,
+  Image,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
+
+// Импортируем компонент игры (создайте этот файл)
+import BubbleGame from '@/components/mini-games/BubbleGame';
 
 export default function CareScreen() {
   const { hippo, feed, clean, play, sleep, giveWater, addCoins } = useHippo();
+  const [showGame, setShowGame] = useState(false);
+  const [gameScore, setGameScore] = useState(0);
+
   const handleFeed = () => {
     feed();
     addCoins(5); // Добавляем монеты за кормление
     Alert.alert('🍖 Накормлено!', 'Бегемотик доволен! +5 монет');
   };
 
-  // В функции handleClean:
   const handleClean = () => {
     clean();
     addCoins(5); // Добавляем монеты за умывание
     Alert.alert('🛁 Помыто!', 'Бегемотик чистый и свежий! +5 монет');
   };
 
-  // В функции handlePlay:
   const handlePlay = () => {
     if ((hippo?.stats.energy || 0) < 20) {
       Alert.alert('😴 Устал', 'Бегемотику нужно спать!');
       return;
     }
-    play();
-    addCoins(10); // Больше монет за игру
-    Alert.alert('🎮 Поиграли!', 'Бегемотик весело играл! +10 монет');
+
+    // Запускаем мини-игру вместо стандартной игры
+    setShowGame(true);
   };
 
-  // В функции handleSleep:
   const handleSleep = () => {
     sleep();
     addCoins(3); // Меньше монет за сон
     Alert.alert('😴 Спит!', 'Бегемотик отдыхает и набирает энергию! +3 монеты');
   };
 
-  // В функции handleWater:
   const handleWater = () => {
     giveWater();
     addCoins(4); // Монеты за поение
     Alert.alert('💧 Напоено!', 'Бегемотик освежился! +4 монеты');
+  };
+
+  // Обработчик завершения игры
+  // Обработчик завершения игры
+  const handleGameEnd = (score: number) => {
+    setGameScore(score);
+    setShowGame(false);
+
+    // Вызываем стандартную функцию игры
+    play(); // play() не возвращает значение
+
+    // Дополнительные награды в зависимости от счета
+    const happinessBonus = Math.min(20, score * 0.5); // +0.5 настроения за очко
+    const coinsBonus = Math.floor(score / 5); // +1 монета за каждые 5 очков
+
+    // Добавляем монеты за игру
+    addCoins(10 + coinsBonus); // 10 базовых + бонус
+
+    Alert.alert(
+      '🎮 Игра окончена!',
+      `Вы набрали ${score} очков!\n` +
+      `+${Math.round(happinessBonus)} к настроению\n` +
+      `+${10 + coinsBonus} монет`,
+      [{ text: 'Отлично!', style: 'default' }]
+    );
+  };
+
+  // Функция для закрытия игры без начисления очков
+  const handleGameClose = () => {
+    setShowGame(false);
   };
 
   return (
@@ -120,6 +160,19 @@ export default function CareScreen() {
         />
       </View>
 
+      {/* Информация об игре */}
+      {(hippo?.stats.energy || 0) >= 20 && (
+        <View style={styles.gameInfo}>
+          <ThemedText style={styles.gameInfoTitle}>🎮 Мини-игра!</ThemedText>
+          <ThemedText style={styles.gameInfoText}>
+            Нажмите "Играть" чтобы поиграть в мини-игру с бегемотиком и получить дополнительные награды!
+          </ThemedText>
+          <ThemedText style={styles.gameInfoSubtext}>
+            Чем больше очков заработаете, тем больше монет получите!
+          </ThemedText>
+        </View>
+      )}
+
       <View style={styles.tips}>
         <ThemedText style={styles.tipTitle}>💡 Советы по уходу:</ThemedText>
         <ThemedText style={styles.tip}>• Кормите, когда сытость ниже 50%</ThemedText>
@@ -130,6 +183,20 @@ export default function CareScreen() {
         <ThemedText style={styles.tip}>• Следите за здоровьем - оно влияет на все показатели</ThemedText>
         <ThemedText style={styles.tip}>• Высокая жажда снижает здоровье и настроение</ThemedText>
       </View>
+
+      {/* Модальное окно с игрой */}
+      <Modal
+        visible={showGame}
+        animationType="slide"
+        transparent={false}
+        statusBarTranslucent={true}
+        onRequestClose={handleGameClose}
+      >
+        <BubbleGame
+          onGameEnd={handleGameEnd}
+          onClose={handleGameClose}
+        />
+      </Modal>
     </ThemedView>
   );
 }
@@ -229,6 +296,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 13,
+  },
+  // Новые стили для информации об игре
+  gameInfo: {
+    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 89, 182, 0.2)',
+  },
+  gameInfoTitle: {
+    fontWeight: '600',
+    marginBottom: 6,
+    fontSize: 14,
+    color: '#9B59B6',
+  },
+  gameInfoText: {
+    fontSize: 13,
+    marginBottom: 4,
+    color: '#34495E',
+  },
+  gameInfoSubtext: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#7F8C8D',
   },
   tips: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',

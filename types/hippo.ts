@@ -43,11 +43,12 @@ export type HippoOutfit = {
     feet?: string;
 };
 
+// types/hippo.ts
 export interface Hippo {
     id: string;
     name: string;
     gender: HippoGender;
-    age: number;
+    age: 'child' | 'parent'; // Изменено на строковый тип
     stats: HippoStats;
     outfit: HippoOutfit;
     coins: number;

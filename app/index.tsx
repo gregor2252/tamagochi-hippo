@@ -13,12 +13,9 @@ export default function Index() {
 
   const checkHippo = async () => {
     try {
-      const [hippoName, hasCreatedHippo] = await Promise.all([
-        storage.getItem('hippoName'),
-        storage.getItem('hasCreatedHippo')
-      ]);
+      const hasCreatedHippo = await storage.getItem('hasCreatedHippo');
 
-      if (hippoName && hasCreatedHippo === 'true') {
+      if (hasCreatedHippo === 'true') {
         setShouldRedirect('/(tabs)');
       } else {
         setShouldRedirect('/onboarding');

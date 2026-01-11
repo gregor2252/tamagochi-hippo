@@ -19,7 +19,7 @@ const initialHippo: Hippo = {
     id: '1',
     name: 'Бегемотик',
     gender: 'male',
-    age: 1,
+    age: 'child', // По умолчанию ребенок
     stats: initialStats,
     outfit: {},
     coins: 100,
@@ -53,6 +53,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const [
                 savedName,
                 savedGender,
+                savedAge, // ДОБАВЛЕННЫЙ ВОЗРАСТ
                 savedStats,
                 savedOutfit,
                 savedCoins,
@@ -65,6 +66,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             ] = await Promise.all([
                 storage.getItem('hippoName'),
                 storage.getItem('hippoGender'),
+                storage.getItem('hippoAge'), // ДОБАВЛЕННЫЙ ВОЗРАСТ
                 storage.getItem('hippoStats'),
                 storage.getItem('hippoOutfit'),
                 storage.getItem('hippoCoins'),
@@ -81,6 +83,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     ...initialHippo,
                     name: savedName,
                     gender: (savedGender as HippoGender) || 'male',
+                    age: savedAge ? (savedAge as 'child' | 'parent') : 'child', // ИСПОЛЬЗУЕМ ВОЗРАСТ
                     coins: savedCoins ? parseInt(savedCoins) : initialHippo.coins,
                     outfit: savedOutfit ? JSON.parse(savedOutfit) : {},
                     feedCount: feedCount ? parseInt(feedCount) : 0,

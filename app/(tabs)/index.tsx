@@ -2,9 +2,11 @@
 import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
+import { storage } from '@/utils/storage';
 import { Link, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   ImageBackground,
   StyleSheet,
@@ -29,7 +31,6 @@ export default function HomeScreen() {
   const getBackgroundByTime = useCallback(() => {
     const now = new Date();
     const hours = now.getHours();
-
     // 05:00 - 17:00 -> real_fon
     if (hours >= 5 && hours < 17) {
       return require('@/screens/Main/real_fon.png');
@@ -45,23 +46,27 @@ export default function HomeScreen() {
   // Обновление фона при монтировании и каждую минуту
   useEffect(() => {
     setBackgroundImage(getBackgroundByTime());
-
     // Обновляем фон каждую минуту
     const interval = setInterval(() => {
       setBackgroundImage(getBackgroundByTime());
     }, 60000); // 60000 мс = 1 минута
-
     return () => clearInterval(interval);
   }, [getBackgroundByTime]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedName = localStorage.getItem('hippoName');
+    loadHippoName();
+  }, [hippo]);
+
+  const loadHippoName = async () => {
+    try {
+      const savedName = await storage.getItem('hippoName');
       if (savedName) {
         setHippoName(savedName);
       }
+    } catch (error) {
+      console.error('Failed to load hippo name:', error);
     }
-  }, [hippo]);
+  };
 
   // Функция для смены настроения бегемотика с автоматическим возвратом
   const setTemporaryMood = useCallback((mood: 'hunger' | 'bath' | 'entertainment' | 'sleep' | 'water') => {
@@ -76,51 +81,64 @@ export default function HomeScreen() {
     router.push(path as any);
   }, [router]);
 
-  const handleResetHippo = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      if (confirm('Вы уверены? Это удалит всё')) {
-        localStorage.removeItem('hippoName');
-        localStorage.removeItem('hippoGender');
-        localStorage.removeItem('hippoAge');
-        localStorage.removeItem('hippoStats');
-        localStorage.removeItem('hasCreatedHippo');
-        localStorage.removeItem('hippoOutfit');
-        localStorage.removeItem('hippoCoins');
-        localStorage.removeItem('unlockedItems');
-        window.location.href = '/onboarding';
-      }
-    }
-  }, []);
+  const handleResetHippo = useCallback(async () => {
+    Alert.alert(
+      'Сброс бегемотика',
+      'Вы уверены? Это удалит все данные о вашем бегемотике.',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Удалить',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await Promise.all([
+                storage.removeItem('hippoName'),
+                storage.removeItem('hippoGender'),
+                storage.removeItem('hippoAge'),
+                storage.removeItem('hippoStats'),
+                storage.removeItem('hasCreatedHippo'),
+                storage.removeItem('hippoOutfit'),
+                storage.removeItem('hippoCoins'),
+                storage.removeItem('unlockedItems'),
+              ]);
+
+              // Редирект на онбординг
+              router.replace('/onboarding');
+            } catch (error) {
+              Alert.alert('Ошибка', 'Не удалось сбросить данные');
+            }
+          }
+        }
+      ]
+    );
+  }, [router]);
 
   return (
     <View style={styles.mainContainer}>
       <View style={styles.sidebarLeft} />
-
       <View style={styles.centerContainer}>
         <ImageBackground source={backgroundImage} style={styles.background} resizeMode="stretch">
           {/* КОНТЕЙНЕР С МОНЕТАМИ В ПРАВОМ ВЕРХНЕМ УГЛУ */}
           <View style={styles.coinContainer}>
             <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
           </View>
-
           <View style={styles.contentWrapper}>
             <View style={styles.header}>
               <ThemedText style={styles.title}>{hippoName}</ThemedText>
             </View>
-
             <View style={styles.hippoContainer}>
               {hippo && (
                 <HippoView mood={hippoMood} size="medium" age={(hippo.age as unknown as 'child' | 'parent') || 'child'} />
               )}
             </View>
-
             <View style={styles.actionButtonsContainer}>
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.satiety || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#FF9800' }]} />
                 </View>
-                <TouchableOpacity 
-                  style={styles.circleButton} 
+                <TouchableOpacity
+                  style={styles.circleButton}
                   onPress={() => {
                     setTemporaryMood('hunger');
                     feed();
@@ -129,13 +147,12 @@ export default function HomeScreen() {
                   <Image source={feedButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.cleanliness || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#2196F3' }]} />
                 </View>
-                <TouchableOpacity 
-                  style={styles.circleButton} 
+                <TouchableOpacity
+                  style={styles.circleButton}
                   onPress={() => {
                     setTemporaryMood('bath');
                     clean();
@@ -144,13 +161,12 @@ export default function HomeScreen() {
                   <Image source={bathButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.happiness || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#E91E63' }]} />
                 </View>
-                <TouchableOpacity 
-                  style={styles.circleButton} 
+                <TouchableOpacity
+                  style={styles.circleButton}
                   onPress={() => {
                     setTemporaryMood('entertainment');
                     play();
@@ -159,13 +175,12 @@ export default function HomeScreen() {
                   <Image source={playButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.energy || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#9C27B0' }]} />
                 </View>
-                <TouchableOpacity 
-                  style={styles.circleButton} 
+                <TouchableOpacity
+                  style={styles.circleButton}
                   onPress={() => {
                     setTemporaryMood('sleep');
                     sleep();
@@ -174,13 +189,12 @@ export default function HomeScreen() {
                   <Image source={sleepButtonImg} style={styles.buttonImage} />
                 </TouchableOpacity>
               </View>
-
               <View style={styles.buttonWithStats}>
                 <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.thirst || 0) * 0.6) }]}>
                   <View style={[styles.statBar, { backgroundColor: '#4CAF50' }]} />
                 </View>
-                <TouchableOpacity 
-                  style={styles.circleButton} 
+                <TouchableOpacity
+                  style={styles.circleButton}
                   onPress={() => {
                     setTemporaryMood('water');
                     giveWater();
@@ -193,31 +207,25 @@ export default function HomeScreen() {
           </View>
         </ImageBackground>
       </View>
-
       <View style={styles.sidebarRight}>
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/care')}>
           <ThemedText style={styles.sideButtonEmoji}>🏥</ThemedText>
           <ThemedText style={styles.sideButtonText}>Уход</ThemedText>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/shop')}>
           <ThemedText style={styles.sideButtonEmoji}>🛍️</ThemedText>
           <ThemedText style={styles.sideButtonText}>Магазин</ThemedText>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.sideButton} onPress={() => navigateTo('/(tabs)/stats')}>
           <ThemedText style={styles.sideButtonEmoji}>📊</ThemedText>
           <ThemedText style={styles.sideButtonText}>Статистика</ThemedText>
         </TouchableOpacity>
-
         <View style={styles.sideButtonDivider} />
-
         <Link href="/onboarding" asChild>
           <TouchableOpacity style={styles.sideButton}>
             <ThemedText style={styles.sideButtonText}>Имя</ThemedText>
           </TouchableOpacity>
         </Link>
-
         <TouchableOpacity style={styles.sideButton} onPress={handleResetHippo}>
           <ThemedText style={[styles.sideButtonText, styles.resetText]}>Сброс</ThemedText>
         </TouchableOpacity>
@@ -233,13 +241,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#1a1a1a',
   },
-
   // ===== БОКОВЫЕ ПАНЕЛИ =====
   sidebarLeft: {
     width: '15%',
     backgroundColor: '#1a1a1a',
   },
-
   // ===== ЦЕНТРАЛЬНАЯ ОБЛАСТЬ С ФОНОМ =====
   centerContainer: {
     flex: 1,
@@ -247,13 +253,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-
   background: {
     flex: 1,
     width: '100%',
     height: '100%',
   },
-
   // ===== КОНТЕЙНЕР С МОНЕТАМИ =====
   coinContainer: {
     position: 'absolute',
@@ -265,13 +269,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     zIndex: 10,
   },
-
   coinText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFD700',
   },
-
   contentWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -279,20 +281,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
   },
-
   // ===== ЗАГОЛОВОК =====
   header: {
     alignItems: 'center',
     marginBottom: 8,
   },
-
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1a1a1a',
     textAlign: 'center',
   },
-
   // ===== КОНТЕЙНЕР С БЕГЕМОТИКОМ =====
   hippoContainer: {
     alignItems: 'center',
@@ -301,7 +300,6 @@ const styles = StyleSheet.create({
     marginTop: 200, // НАСТРОЙКА: увеличено для опускания бегемотика ниже
     marginBottom: 20,
   },
-
   // ===== КНОПКИ ДЕЙСТВИЙ =====
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -313,13 +311,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     marginTop: 'auto',
   },
-
   buttonWithStats: {
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: 120,
   },
-
   statBarContainer: {
     width: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
@@ -328,12 +324,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
-
   statBar: {
     width: '100%',
     height: '100%',
   },
-
   circleButton: {
     width: 70,
     height: 70,
@@ -346,13 +340,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
-
   buttonImage: {
     width: 70,
     height: 70,
     resizeMode: 'stretch',
   },
-
   // ===== ПРАВАЯ БОКОВАЯ ПАНЕЛЬ =====
   sidebarRight: {
     width: '15%',
@@ -363,7 +355,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 12,
   },
-
   sideButton: {
     width: '100%',
     paddingVertical: 12,
@@ -375,26 +366,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-
   sideButtonEmoji: {
     fontSize: 20,
     marginBottom: 4,
   },
-
   sideButtonText: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
-
   sideButtonDivider: {
     width: '80%',
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginVertical: 8,
   },
-
   resetText: {
     color: '#FF5252',
   },

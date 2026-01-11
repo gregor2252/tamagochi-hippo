@@ -1,4 +1,5 @@
 // app/onboarding/age.tsx - ВЫБОР ВОЗРАСТА
+import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -13,18 +14,19 @@ export default function AgeScreen() {
     setAge(selectedAge);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!age) {
       return;
     }
 
     // Сохраняем выбранный возраст
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoAge', age);
+    try {
+      await storage.setItem('hippoAge', age);
+      // Переходим к выбору имени
+      router.push('/onboarding/name');
+    } catch (error) {
+      console.error('Failed to save age:', error);
     }
-
-    // Переходим к выбору имени
-    router.push('/onboarding/name');
   };
 
   const handleBack = () => {
@@ -34,7 +36,6 @@ export default function AgeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Выберите возраст бегемотика</Text>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[
@@ -51,7 +52,6 @@ export default function AgeScreen() {
             Ребенок
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           style={[
             styles.ageButton,
@@ -68,7 +68,6 @@ export default function AgeScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
       <View style={styles.navigationContainer}>
         <TouchableOpacity
           style={styles.backButton}
@@ -76,7 +75,6 @@ export default function AgeScreen() {
         >
           <Text style={styles.backButtonText}>← Назад</Text>
         </TouchableOpacity>
-
         {age && (
           <TouchableOpacity
             style={styles.continueButton}

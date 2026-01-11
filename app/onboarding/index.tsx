@@ -1,4 +1,5 @@
 // app/onboarding/index.tsx - ВЫБОР ПОЛА
+import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -13,24 +14,24 @@ export default function OnboardingScreen() {
     setGender(selectedGender);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!gender) {
       return;
     }
 
     // Сохраняем выбранный пол
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoGender', gender);
+    try {
+      await storage.setItem('hippoGender', gender);
+      // Переходим к выбору возраста
+      router.push('/onboarding/age');
+    } catch (error) {
+      console.error('Failed to save gender:', error);
     }
-
-    // Переходим к выбору возраста
-    router.push('/onboarding/age');
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Выберите пол бегемотика</Text>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[
@@ -47,7 +48,6 @@ export default function OnboardingScreen() {
             Мужской
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           style={[
             styles.genderButton,
@@ -64,7 +64,6 @@ export default function OnboardingScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
       {gender && (
         <TouchableOpacity
           style={styles.continueButton}

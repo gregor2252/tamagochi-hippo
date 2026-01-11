@@ -271,7 +271,7 @@ export default function StatsScreen() {
 
                     <SimpleStatItem
                         label="Возраст"
-                        value={`${hippo.age} дн.`}
+                        value={hippo.age === 'child' ? 'Малыш' : 'Взрослый'}
                         icon="📅"
                         color="#607D8B"
                     />

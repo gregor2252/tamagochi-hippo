@@ -1,4 +1,5 @@
 // app/onboarding/name.tsx - ВЫБОР ИМЕНИ
+import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -7,19 +8,23 @@ export default function NameScreen() {
   const router = useRouter();
   const [name, setName] = useState('');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!name.trim()) {
       return;
     }
 
     // Сохраняем имя
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hippoName', name.trim());
-      localStorage.setItem('hasCreatedHippo', 'true');
-    }
+    try {
+      await Promise.all([
+        storage.setItem('hippoName', name.trim()),
+        storage.setItem('hasCreatedHippo', 'true')
+      ]);
 
-    // Переходим на главный экран
-    router.replace('/(tabs)');
+      // Переходим на главный экран
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Failed to save name:', error);
+    }
   };
 
   const handleBack = () => {
@@ -31,7 +36,6 @@ export default function NameScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Дайте имя бегемотику</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Введите имя..."
@@ -41,11 +45,9 @@ export default function NameScreen() {
         autoFocus
         placeholderTextColor="#A65437"
       />
-
       <Text style={styles.hint}>
         Примеры: Пузик, Мото, Река, Счастливчик
       </Text>
-
       <View style={styles.navigationContainer}>
         <TouchableOpacity
           style={styles.backButton}
@@ -53,7 +55,6 @@ export default function NameScreen() {
         >
           <Text style={styles.backButtonText}>← Назад</Text>
         </TouchableOpacity>
-
         {canContinue && (
           <TouchableOpacity
             style={styles.continueButton}

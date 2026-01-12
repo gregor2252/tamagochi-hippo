@@ -287,13 +287,6 @@ export default function StatsScreen() {
                     />
 
                     <SimpleStatItem
-                        label="Поиграно раз"
-                        value={hippo.playCount || 0}
-                        icon="🎮"
-                        color="#9C27B0"
-                    />
-
-                    <SimpleStatItem
                         label="Поспано раз"
                         value={hippo.sleepCount || 0}
                         icon="😴"

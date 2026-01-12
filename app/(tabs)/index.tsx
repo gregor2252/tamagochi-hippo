@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx - ГЛАВНЫЙ ЭКРАН БЕЗ БОКОВЫХ ПАНЕЛЕЙ
+// app/(tabs)/index.tsx - ГЛАВНЫЙ ЭКРАН С ИЗМЕНЕННОЙ КНОПКОЙ ИГРАТЬ
 import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
@@ -6,14 +6,14 @@ import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    Modal,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  ImageBackground,
+  Modal,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const feedButtonImg = require('@/assets/images/eat_button.png');
@@ -95,6 +95,12 @@ export default function HomeScreen() {
     }
   };
 
+  // ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ КНОПКИ ИГРАТЬ
+  const handlePlay = () => {
+    // Просто переходим на страницу игр
+    router.push('/games');
+  };
+
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={backgroundImage} style={styles.background} resizeMode="stretch">
@@ -120,6 +126,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.actionButtonsContainer}>
+            {/* КОРМИТЬ */}
             <View style={styles.buttonWithStats}>
               <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.satiety || 0) * 0.6) }]}>
                 <View style={[styles.statBar, { backgroundColor: '#FF9800' }]} />
@@ -135,6 +142,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* МЫТЬ */}
             <View style={styles.buttonWithStats}>
               <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.cleanliness || 0) * 0.6) }]}>
                 <View style={[styles.statBar, { backgroundColor: '#2196F3' }]} />
@@ -150,21 +158,20 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* ИГРАТЬ - ОБНОВЛЕННАЯ КНОПКА */}
             <View style={styles.buttonWithStats}>
               <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.happiness || 0) * 0.6) }]}>
                 <View style={[styles.statBar, { backgroundColor: '#E91E63' }]} />
               </View>
               <TouchableOpacity
                 style={styles.circleButton}
-                onPress={() => {
-                  setTemporaryMood('entertainment');
-                  play();
-                }}
+                onPress={handlePlay} // Просто переход на страницу игр
               >
                 <Image source={playButtonImg} style={styles.buttonImage} />
               </TouchableOpacity>
             </View>
 
+            {/* СПАТЬ */}
             <View style={styles.buttonWithStats}>
               <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.energy || 0) * 0.6) }]}>
                 <View style={[styles.statBar, { backgroundColor: '#9C27B0' }]} />
@@ -180,6 +187,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* ПОИТЬ */}
             <View style={styles.buttonWithStats}>
               <View style={[styles.statBarContainer, { height: Math.max(4, (hippo?.stats.thirst || 0) * 0.6) }]}>
                 <View style={[styles.statBar, { backgroundColor: '#4CAF50' }]} />
@@ -208,7 +216,6 @@ export default function HomeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ThemedText style={styles.modalTitle}>Настройки</ThemedText>
-
             <View style={styles.settingSection}>
               <ThemedText style={styles.settingLabel}>Имя бегемотика:</ThemedText>
               <TextInput
@@ -219,12 +226,10 @@ export default function HomeScreen() {
                 placeholder="Введите имя"
               />
             </View>
-
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.modalButton} onPress={() => setSettingsModalVisible(false)}>
                 <ThemedText style={styles.modalButtonText}>Отмена</ThemedText>
               </TouchableOpacity>
-
               <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleSaveName}>
                 <ThemedText style={styles.saveButtonText}>Сохранить</ThemedText>
               </TouchableOpacity>

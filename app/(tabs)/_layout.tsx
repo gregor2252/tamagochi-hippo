@@ -1,9 +1,9 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
+// app/(tabs)/_layout.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs } from 'expo-router';
+import React from 'react';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -24,12 +24,13 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* ИСПРАВЛЕНО: Используем 'gamepad' вместо 'gamecontroller' */}
       <Tabs.Screen
-        name="care"
+        name="games"
         options={{
-          title: 'Уход',
+          title: 'Игры',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'heart' : 'heart'} color={color} />
+            <TabBarIcon name={focused ? 'gamepad' : 'gamepad'} color={color} />
           ),
         }}
       />

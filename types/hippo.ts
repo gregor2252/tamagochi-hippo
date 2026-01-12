@@ -74,16 +74,17 @@ export interface HippoContextType {
     updateStats: (stats: Partial<HippoStats>) => void;
     feed: () => void;
     clean: () => void;
-    play: () => void;
+    play: () => boolean; // Изменено: возвращает boolean
     sleep: () => void;
     giveWater: () => void;
     resetHippo: () => void;
     hasCompletedOnboarding: boolean;
     completeOnboarding: (name: string, gender: HippoGender) => void;
-    // ФУНКЦИИ ДЛЯ МАГАЗИНА
-    buyItem: (itemId: string) => boolean; // Обратно на boolean
+    buyItem: (itemId: string) => boolean;
     equipItem: (itemId: string) => void;
     unequipItem: (category: ClothingCategory) => void;
     addCoins: (amount: number) => void;
     getAvailableItems: () => ClothingItem[];
+    // Добавляем completeGame (опционально, если хотим использовать)
+    completeGame?: (score: number) => { coinsBonus: number; happinessBonus: number };
 }

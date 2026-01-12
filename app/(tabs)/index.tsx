@@ -6,14 +6,14 @@ import { storage } from '@/utils/storage';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  ImageBackground,
-  Modal,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    ImageBackground,
+    Modal,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const feedButtonImg = require('@/assets/images/eat_button.png');

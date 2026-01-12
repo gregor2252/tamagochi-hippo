@@ -125,7 +125,7 @@ export default function ShopScreen() {
 
       {/* МОДАЛЬНОЕ ОКНО ВЫБОРА ПРЕДМЕТА */}
       <Modal
-        visible={selectedCategory !== null}
+        visible={selectedCategory !== null && items.length > 0}
         transparent={true}
         animationType="fade"
         onRequestClose={handleCloseModal}
@@ -142,75 +142,67 @@ export default function ShopScreen() {
               </TouchableOpacity>
             </View>
 
-            {items.length > 0 ? (
-              <>
-                {/* ПРЕДМЕТ */}
-                <View style={styles.itemDisplay}>
-                  <ThemedText style={styles.itemEmoji}>{currentItem?.icon}</ThemedText>
-                  <ThemedText style={styles.itemName}>{currentItem?.name}</ThemedText>
-                  <ThemedText style={styles.itemDescription}>{currentItem?.description}</ThemedText>
+            {/* ПРЕДМЕТ */}
+            <View style={styles.itemDisplay}>
+              <ThemedText style={styles.itemEmoji}>{currentItem?.icon}</ThemedText>
+              <ThemedText style={styles.itemName}>{currentItem?.name}</ThemedText>
+              <ThemedText style={styles.itemDescription}>{currentItem?.description}</ThemedText>
 
-                  {/* СТАТУС */}
-                  {isUnlocked ? (
-                    <View style={styles.statusBadge}>
-                      <ThemedText style={styles.statusText}>✓ Куплено</ThemedText>
-                    </View>
-                  ) : (
-                    <View style={[styles.statusBadge, styles.priceBadge]}>
-                      <ThemedText style={styles.priceText}>💰 {currentItem?.price}</ThemedText>
-                    </View>
-                  )}
+              {/* СТАТУС */}
+              {isUnlocked ? (
+                <View style={styles.statusBadge}>
+                  <ThemedText style={styles.statusText}>✓ Куплено</ThemedText>
                 </View>
+              ) : (
+                <View style={[styles.statusBadge, styles.priceBadge]}>
+                  <ThemedText style={styles.priceText}>💰 {currentItem?.price}</ThemedText>
+                </View>
+              )}
+            </View>
 
-                {/* НАВИГАЦИЯ */}
-                <View style={styles.navigationContainer}>
-                  <TouchableOpacity
-                    style={[styles.arrowButton, currentItemIndex === 0 && styles.arrowButtonDisabled]}
-                    onPress={handlePrevItem}
-                    disabled={currentItemIndex === 0}
-                  >
-                    <ThemedText style={styles.arrowText}>←</ThemedText>
-                  </TouchableOpacity>
+            {/* НАВИГАЦИЯ */}
+            <View style={styles.navigationContainer}>
+              <TouchableOpacity
+                style={[styles.arrowButton, currentItemIndex === 0 && styles.arrowButtonDisabled]}
+                onPress={handlePrevItem}
+                disabled={currentItemIndex === 0}
+              >
+                <ThemedText style={styles.arrowText}>←</ThemedText>
+              </TouchableOpacity>
 
-                  <ThemedText style={styles.itemCounter}>
-                    {currentItemIndex + 1} / {items.length}
+              <ThemedText style={styles.itemCounter}>
+                {currentItemIndex + 1} / {items.length}
+              </ThemedText>
+
+              <TouchableOpacity
+                style={[styles.arrowButton, currentItemIndex === items.length - 1 && styles.arrowButtonDisabled]}
+                onPress={handleNextItem}
+                disabled={currentItemIndex === items.length - 1}
+              >
+                <ThemedText style={styles.arrowText}>→</ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {/* КНОПКИ ДЕЙСТВИЙ */}
+            <View style={styles.actionButtonsContainer}>
+              {isUnlocked ? (
+                <TouchableOpacity
+                  style={[styles.actionButton, isEquipped ? styles.removeButton : styles.equipButton]}
+                  onPress={handleEquipItem}
+                >
+                  <ThemedText style={styles.actionButtonText}>
+                    {isEquipped ? '❌ Снять' : '✅ Надеть'}
                   </ThemedText>
-
-                  <TouchableOpacity
-                    style={[styles.arrowButton, currentItemIndex === items.length - 1 && styles.arrowButtonDisabled]}
-                    onPress={handleNextItem}
-                    disabled={currentItemIndex === items.length - 1}
-                  >
-                    <ThemedText style={styles.arrowText}>→</ThemedText>
-                  </TouchableOpacity>
-                </View>
-
-                {/* КНОПКИ ДЕЙСТВИЙ */}
-                <View style={styles.actionButtonsContainer}>
-                  {isUnlocked ? (
-                    <TouchableOpacity
-                      style={[styles.actionButton, isEquipped ? styles.removeButton : styles.equipButton]}
-                      onPress={handleEquipItem}
-                    >
-                      <ThemedText style={styles.actionButtonText}>
-                        {isEquipped ? '❌ Снять' : '✅ Надеть'}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.buyButton]}
-                      onPress={handleBuyItem}
-                    >
-                      <ThemedText style={styles.actionButtonText}>🛒 Купить</ThemedText>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </>
-            ) : (
-              <View style={styles.emptyContainer}>
-                <ThemedText style={styles.emptyText}>Нет предметов в этой категории</ThemedText>
-              </View>
-            )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.buyButton]}
+                  onPress={handleBuyItem}
+                >
+                  <ThemedText style={styles.actionButtonText}>🛒 Купить</ThemedText>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </Modal>
@@ -443,15 +435,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  // ===== ПУСТО =====
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#666',
   },
 });

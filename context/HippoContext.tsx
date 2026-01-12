@@ -442,7 +442,8 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 storage.setItem('hippoGender', gender),
                 storage.setItem('hasCreatedHippo', 'true'),
                 storage.setItem('hippoStats', JSON.stringify(updatedHippo.stats)),
-                storage.setItem('hippoCoins', updatedHippo.coins.toString())
+                storage.setItem('hippoCoins', updatedHippo.coins.toString()),
+                storage.setItem('hippoAge', updatedHippo.age)
             ]).catch(error => {
                 console.error('Failed to save onboarding data:', error);
             });

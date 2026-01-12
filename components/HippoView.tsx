@@ -9,13 +9,13 @@ const babyEntertainment = require('@/models/baby/entertainment/entertainment.png
 const babySleep = require('@/models/baby/sleep/sleep.png');
 const babyWater = require('@/models/baby/water/water.png');
 
-// Статические импорты для parent (используем baby пока нет parent картинок)
-const parentDefault = require('@/models/baby/default.png');
-const parentHunger = require('@/models/baby/hunger/hunger.png');
-const parentBath = require('@/models/baby/bath/bath.png');
-const parentEntertainment = require('@/models/baby/entertainment/entertainment.png');
-const parentSleep = require('@/models/baby/sleep/sleep.png');
-const parentWater = require('@/models/baby/water/water.png');
+// Статические импорты для parent
+const parentDefault = require('@/models/parent/default.png');
+const parentHunger = require('@/models/parent/hunger/hunger.png');
+const parentBath = require('@/models/parent/bath/bath.png');
+const parentEntertainment = require('@/models/parent/entertainment/entertainment.png');
+const parentSleep = require('@/models/parent/sleep/sleep.png');
+const parentWater = require('@/models/parent/water/water.png');
 
 interface HippoViewProps {
     mood?: 'default' | 'hunger' | 'bath' | 'entertainment' | 'sleep' | 'water';

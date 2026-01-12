@@ -1,195 +1,211 @@
-// app/(tabs)/games.tsx - ИСПРАВЛЕННАЯ ВЕРСИЯ (статусы меняются только после игры)
+// app/(tabs)/games.tsx - ПОЛНОСТЬЮ ПЕРЕРАБОТАННЫЙ ДИЗАЙН С ФОНОМ И НОВЫМИ КНОПКАМИ
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    ImageBackground,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    View
 } from 'react-native';
+// Импорты компонентов
+import EnergyBar from '@/components/mini-games/EnergyBar';
+import GameCard from '@/components/mini-games/GameCard';
+import NavigationArrows from '@/components/mini-games/NavigationArrows';
 // Импорты игр
 import BubbleGame from '@/components/mini-games/BubbleGame';
 import DiceGuessGame from '@/components/mini-games/DiceGuessGame';
 import MemoryGame from '@/components/mini-games/MemoryGame';
 
-export default function GamesScreen() {
-  const { hippo, addCoins, updateStats } = useHippo(); // Убрали play, добавили updateStats
-  const [activeGame, setActiveGame] = useState<'bubble' | 'diceGuess' | 'memory' | null>(null);
-  const [gameScore, setGameScore] = useState(0);
-  const [selectedGameType, setSelectedGameType] = useState<'bubble' | 'diceGuess' | 'memory' | null>(null);
+const GAMES = [
+  {
+    id: 'bubble',
+    title: 'Лопай пузыри',
+    icon: require('@/models/icons/games/bubble_icon.png'),
+    energyCost: 20,
+  },
+  {
+    id: 'diceGuess',
+    title: 'Угадай число',
+    icon: require('@/models/icons/games/number icon.png'),
+    energyCost: 20,
+  },
+  {
+    id: 'memory',
+    title: 'Игра на память',
+    icon: require('@/models/icons/games/logic icon.png'),
+    energyCost: 20,
+  },
+  {
+    id: 'comingSoon',
+    title: 'Скоро...',
+    icon: require('@/models/icons/games/coming soon.png'),
+    energyCost: 20,
+    isComingSoon: true,
+  },
+];
 
-  const canPlayGame = (hippo?.stats.energy || 0) >= 20;
+export default function GamesScreen() {
+  const { hippo, addCoins, updateStats } = useHippo();
+  const [activeGame, setActiveGame] = useState<'bubble' | 'diceGuess' | 'memory' | null>(null);
+  const [selectedGameType, setSelectedGameType] = useState<'bubble' | 'diceGuess' | 'memory' | null>(null);
+  const [currentGameIndex, setCurrentGameIndex] = useState(0);
+  const [backgroundImage, setBackgroundImage] = useState(require('@/screens/Main/real_fon.png'));
+
+  const currentEnergy = hippo?.stats.energy || 0;
+  const currentGame = GAMES[currentGameIndex];
+
+  // Функция для определения текущего фона на основе времени
+  const getBackgroundByTime = useCallback(() => {
+    const now = new Date();
+    const hours = now.getHours();
+    if (hours >= 5 && hours < 17) {
+      return require('@/screens/Main/real_fon.png');
+    }
+    if (hours >= 17 && hours < 22) {
+      return require('@/screens/Main/evening_fon.png');
+    }
+    return require('@/screens/Main/night_fon.png');
+  }, []);
+
+  useEffect(() => {
+    setBackgroundImage(getBackgroundByTime());
+    const interval = setInterval(() => {
+      setBackgroundImage(getBackgroundByTime());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [getBackgroundByTime]);
 
   const handleGameStart = (gameType: 'bubble' | 'diceGuess' | 'memory') => {
-    if (!canPlayGame) {
-      Alert.alert('😴 Бегемотик устал!', 'Нужно больше энергии (минимум 20%)');
+    const game = GAMES.find(g => g.id === gameType);
+    if (!game) return;
+
+    if (currentEnergy < game.energyCost) {
+      Alert.alert('😴 Бегемотик устал!', `Нужно ${game.energyCost}% энергии для этой игры`);
       return;
     }
 
-    // Сохраняем тип игры, но НЕ меняем статусы еще
     setSelectedGameType(gameType);
     setActiveGame(gameType);
   };
 
   const handleGameEnd = (score: number) => {
-    setGameScore(score);
     setActiveGame(null);
 
-    // Теперь меняем статусы ТОЛЬКО когда игра завершена
-    if (score > 0) { // Если набрали хоть какие-то очки (игра не была просто закрыта)
+    if (score > 0) {
+      const game = GAMES.find(g => g.id === selectedGameType);
+      if (!game) return;
+
       // Списываем энергию и добавляем настроение
       updateStats({
-        happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10), // +10 настроения за игру
-        energy: Math.max(0, (hippo?.stats.energy || 0) - 20), // -20 энергии (стоимость игры)
-        satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5), // -5 сытости
-        thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5), // -5 жажды
+        happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
+        energy: Math.max(0, currentEnergy - game.energyCost),
+        satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
+        thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
       });
+
+      // Вычисляем награды
+      const happinessBonus = Math.min(30, score * 0.1);
+      let baseCoins = 10;
+      if (selectedGameType === 'diceGuess') baseCoins = 12;
+      if (selectedGameType === 'memory') baseCoins = 15;
+
+      const coinsBonus = Math.floor(score / 20);
+      addCoins(baseCoins + coinsBonus);
+
+      Alert.alert(
+        '🎮 Игра окончена!',
+        `Вы набрали ${score} очков!\n` +
+        `+${Math.round(10 + happinessBonus)} к настроению\n` +
+        `-${game.energyCost}% энергии\n` +
+        `+${baseCoins + coinsBonus} монет`,
+        [{ text: 'Отлично!', style: 'default' }]
+      );
     }
 
-    // Вычисляем награды в зависимости от счета
-    const happinessBonus = Math.min(30, score * 0.1); // Дополнительный бонус настроения за очки
-
-    // Разные базовые награды для разных игр
-    let baseCoins = 10;
-    if (selectedGameType === 'diceGuess') baseCoins = 12;
-    if (selectedGameType === 'memory') baseCoins = 15;
-
-    const coinsBonus = Math.floor(score / 20);
-
-    // Добавляем монеты за игру
-    addCoins(baseCoins + coinsBonus);
-
-    // Увеличиваем счетчик игр
-    if (score > 0) {
-      // Можно добавить счетчик игр здесь, если нужно
-    }
-
-    Alert.alert(
-      '🎮 Игра окончена!',
-      `Вы набрали ${score} очков!\n` +
-      `+${Math.round(10 + happinessBonus)} к настроению\n` +
-      `-20% энергии (стоимость игры)\n` +
-      `+${baseCoins + coinsBonus} монет`,
-      [{ text: 'Отлично!', style: 'default' }]
-    );
-
-    // Сбрасываем выбранный тип игры
     setSelectedGameType(null);
   };
 
   const handleGameClose = () => {
-    // Если игра закрыта без завершения, не меняем статусы
     setActiveGame(null);
     setSelectedGameType(null);
   };
 
+  const handlePrevious = () => {
+    setCurrentGameIndex((prev) => (prev - 1 + GAMES.length) % GAMES.length);
+  };
+
+  const handleNext = () => {
+    setCurrentGameIndex((prev) => (prev + 1) % GAMES.length);
+  };
+
+  const isComingSoon = currentGame?.isComingSoon || false;
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        🎮 Мини-игры
-      </ThemedText>
+    <ImageBackground
+      source={backgroundImage}
+      style={styles.background}
+      resizeMode="stretch"
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ЗАГОЛОВОК */}
+        <View style={styles.headerSection}>
+          <ThemedText style={styles.title}>🎮 Мини-игры</ThemedText>
+        </View>
 
-      <ThemedText style={styles.subtitle}>
-        Играйте с {hippo?.name || 'бегемотиком'} и получайте награды!
-      </ThemedText>
+        {/* ШКАЛА ЭНЕРГИИ */}
+        <View style={styles.contentPadding}>
+          <EnergyBar current={currentEnergy} max={100} />
+        </View>
 
-      {/* Показатели энергии */}
-      <View style={styles.energyContainer}>
-        <ThemedText style={styles.energyText}>
-          ⚡ Энергия: {Math.round(hippo?.stats.energy || 0)}%
-        </ThemedText>
-        <ThemedText style={styles.energyTip}>
-          {canPlayGame ? '✅ Игры доступны!' : '😴 Нужно больше энергии (минимум 20%)'}
-        </ThemedText>
-      </View>
+        {/* КАРТОЧКА ИГРЫ */}
+        <View style={styles.contentPadding}>
+          {isComingSoon ? (
+            <View style={styles.comingSoonCard}>
+              <View style={styles.iconWrapper}>
+                <Image
+                  source={require('@/models/icons/games/coming soon.png')}
+                  style={styles.comingSoonIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.card}>
+                <ThemedText style={styles.gameTitle}>Скоро...</ThemedText>
+                <ThemedText style={styles.comingSoonText}>
+                  Новая игра уже в разработке!
+                </ThemedText>
+              </View>
+            </View>
+          ) : (
+            <GameCard
+              title={currentGame.title}
+              icon={currentGame.icon}
+              energyCost={currentGame.energyCost}
+              currentEnergy={currentEnergy}
+              onPlay={() => handleGameStart(currentGame.id as any)}
+              isDisabled={false}
+              index={currentGameIndex}
+              totalGames={GAMES.length}
+            />
+          )}
+        </View>
 
-      {/* Сетка игр */}
-      <View style={styles.gamesGrid}>
-        {/* ИГРА 1: Пузыри */}
-        <TouchableOpacity
-          style={[styles.gameCard, !canPlayGame && styles.disabledCard]}
-          onPress={() => handleGameStart('bubble')}
-          disabled={!canPlayGame}
-        >
-          <View style={[styles.gameIcon, { backgroundColor: '#FF6B6B' }]}>
-            <ThemedText style={styles.gameEmoji}>🫧</ThemedText>
-          </View>
-          <ThemedText style={styles.gameTitle}>Лопай пузыри!</ThemedText>
-          <ThemedText style={styles.gameDescription}>
-            30 секунд, лопайте пузыри
-          </ThemedText>
-          <View style={styles.costBadge}>
-            <ThemedText style={styles.costText}>⚡ -20% энергии</ThemedText>
-          </View>
-        </TouchableOpacity>
-
-        {/* ИГРА 2: Угадай число на кубике */}
-        <TouchableOpacity
-          style={[styles.gameCard, !canPlayGame && styles.disabledCard]}
-          onPress={() => handleGameStart('diceGuess')}
-          disabled={!canPlayGame}
-        >
-          <View style={[styles.gameIcon, { backgroundColor: '#6D4C41' }]}>
-            <ThemedText style={styles.gameEmoji}>🎲</ThemedText>
-          </View>
-          <ThemedText style={styles.gameTitle}>Угадай число!</ThemedText>
-          <ThemedText style={styles.gameDescription}>
-            10 раундов, угадывайте числа
-          </ThemedText>
-          <View style={styles.costBadge}>
-            <ThemedText style={styles.costText}>⚡ -20% энергии</ThemedText>
-          </View>
-        </TouchableOpacity>
-
-        {/* ИГРА 3: Память */}
-        <TouchableOpacity
-          style={[styles.gameCard, !canPlayGame && styles.disabledCard]}
-          onPress={() => handleGameStart('memory')}
-          disabled={!canPlayGame}
-        >
-          <View style={[styles.gameIcon, { backgroundColor: '#9C27B0' }]}>
-            <ThemedText style={styles.gameEmoji}>🧠</ThemedText>
-          </View>
-          <ThemedText style={styles.gameTitle}>Игра на память</ThemedText>
-          <ThemedText style={styles.gameDescription}>
-            Находите пары карточек
-          </ThemedText>
-          <View style={styles.costBadge}>
-            <ThemedText style={styles.costText}>⚡ -20% энергии</ThemedText>
-          </View>
-        </TouchableOpacity>
-
-        {/* Место для 4-й игры */}
-        <TouchableOpacity
-          style={[styles.gameCard, styles.comingSoonCard]}
-          disabled={true}
-        >
-          <View style={[styles.gameIcon, { backgroundColor: '#2196F3' }]}>
-            <ThemedText style={styles.gameEmoji}>🎯</ThemedText>
-          </View>
-          <ThemedText style={styles.gameTitle}>Новая игра</ThemedText>
-          <ThemedText style={styles.gameDescription}>
-            Следите за обновлениями!
-          </ThemedText>
-          <View style={styles.comingSoonBadge}>
-            <ThemedText style={styles.comingSoonText}>🔜 Скоро</ThemedText>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Правила игр */}
-      <View style={styles.rulesContainer}>
-        <ThemedText style={styles.rulesTitle}>📝 Правила игр:</ThemedText>
-        <ThemedText style={styles.rule}>• Каждая игра стоит 20% энергии</ThemedText>
-        <ThemedText style={styles.rule}>• Чем больше очков, тем больше награда</ThemedText>
-        <ThemedText style={styles.rule}>• Играйте регулярно, чтобы поднимать настроение бегемотика</ThemedText>
-        <ThemedText style={styles.rule}>• Максимальная награда: 10-15 монет + бонус за очки</ThemedText>
-        <ThemedText style={styles.rule}>• После игры: +настроение, -энергия, +монеты</ThemedText>
-        <ThemedText style={styles.rule}>• Если просто закрыть игру - статусы не меняются!</ThemedText>
-      </View>
+        {/* СТРЕЛКИ НАВИГАЦИИ - ВНИЗУ */}
+        <View style={styles.contentPadding}>
+          <NavigationArrows
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            canGoPrevious={GAMES.length > 1}
+            canGoNext={GAMES.length > 1}
+          />
+        </View>
+      </ScrollView>
 
       {/* Модальные окна игр */}
       <Modal
@@ -230,139 +246,78 @@ export default function GamesScreen() {
           onClose={handleGameClose}
         />
       </Modal>
-    </ThemedView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    padding: 16,
+    width: '100%',
+    height: '100%',
+  },
+  scrollContent: {
+    paddingTop: 40,
+    paddingBottom: 60,
+  },
+  contentPadding: {
+    paddingHorizontal: 20,
+  },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 32,
   },
   title: {
-    fontSize: 22,
+    fontSize: 32,
     fontWeight: '700',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    marginBottom: 16,
-    opacity: 0.8,
-    textAlign: 'center',
-  },
-  energyContainer: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 193, 7, 0.2)',
-  },
-  energyText: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#FF9800',
-  },
-  energyTip: {
-    fontSize: 12,
-    marginTop: 4,
-    opacity: 0.8,
-  },
-  gamesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 20,
-  },
-  gameCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  disabledCard: {
-    opacity: 0.5,
+    color: '#FFFEF0',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   comingSoonCard: {
-    opacity: 0.7,
-  },
-  gameIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  gameEmoji: {
-    fontSize: 40,
+  iconWrapper: {
+    marginBottom: -40,
+    zIndex: 10,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: '#FFF7E8',
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   gameTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 6,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 16,
     textAlign: 'center',
   },
-  gameDescription: {
-    fontSize: 12,
-    textAlign: 'center',
-    opacity: 0.7,
-    marginBottom: 10,
-    flex: 1,
+  comingSoonEmoji: {
+    fontSize: 80,
   },
-  costBadge: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 193, 7, 0.2)',
-  },
-  costText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FF9800',
-  },
-  comingSoonBadge: {
-    backgroundColor: 'rgba(158, 158, 158, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(158, 158, 158, 0.2)',
+  comingSoonIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFF7E8',
+    padding: 10,
   },
   comingSoonText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#9E9E9E',
-  },
-  rulesContainer: {
-    backgroundColor: 'rgba(33, 150, 243, 0.05)',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(33, 150, 243, 0.1)',
-  },
-  rulesTitle: {
-    fontWeight: '600',
-    marginBottom: 10,
     fontSize: 16,
-    color: '#2196F3',
-  },
-  rule: {
-    marginLeft: 8,
-    marginBottom: 6,
-    fontSize: 13,
-    opacity: 0.8,
+    color: '#1a1a1a',
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });

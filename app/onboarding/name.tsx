@@ -13,7 +13,7 @@ export default function NameScreen() {
       return;
     }
 
-    // Сохраняем имя
+    // Сохраняем имя и отмечаем, что онбординг завершен
     try {
       await Promise.all([
         storage.setItem('hippoName', name.trim()),

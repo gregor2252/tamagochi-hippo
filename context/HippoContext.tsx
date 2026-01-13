@@ -89,7 +89,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                     sleepCount: sleepCount ? parseInt(sleepCount) : 0,
                     waterCount: waterCount ? parseInt(waterCount) : 0,
                 };
-                
+
                 if (savedStats) {
                     try {
                         const parsedStats = JSON.parse(savedStats);
@@ -183,7 +183,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const updated = {
                 ...prev,
                 feedCount: prev.feedCount + 1,
-                coins: prev.coins + 5
             };
             Promise.all([
                 storage.setItem('hippoFeedCount', updated.feedCount.toString()),
@@ -193,7 +192,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         });
         updateStats({
             satiety: Math.min(100, (hippo?.stats.satiety || 0) + 30),
-            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
             energy: Math.min(100, (hippo?.stats.energy || 0) + 5),
             thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
         });
@@ -205,7 +203,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const updated = {
                 ...prev,
                 cleanCount: prev.cleanCount + 1,
-                coins: prev.coins + 5
             };
             Promise.all([
                 storage.setItem('hippoCleanCount', updated.cleanCount.toString()),
@@ -215,7 +212,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         });
         updateStats({
             cleanliness: Math.min(100, (hippo?.stats.cleanliness || 0) + 40),
-            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 5),
             energy: Math.max(0, (hippo?.stats.energy || 0) - 10),
         });
     }, [hippo?.stats, updateStats]);
@@ -241,7 +237,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         if (hippo && hippo.stats.energy < 20) {
             return false; // Недостаточно энергии
         }
-        
+
         setHippo(prev => {
             if (!prev) return prev;
             const updated = {
@@ -252,7 +248,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 .catch(error => console.error('Failed to save play count:', error));
             return updated;
         });
-        
+
         // Обновляем статистику: списываем энергию, добавляем немного настроения
         updateStats({
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + 10),
@@ -260,7 +256,7 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             satiety: Math.max(0, (hippo?.stats.satiety || 0) - 5),
             thirst: Math.max(0, (hippo?.stats.thirst || 0) - 5),
         });
-        
+
         return true; // Игра успешно начата
     }, [hippo?.stats, updateStats]);
 
@@ -269,15 +265,15 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         // Рассчитываем бонусы в зависимости от счета
         const coinsBonus = Math.floor(score / 10);
         const happinessBonus = Math.min(25, score * 0.1);
-        
+
         // Добавляем монеты
         addCoins(coinsBonus);
-        
+
         // Дополнительно увеличиваем настроение
         updateStats({
             happiness: Math.min(100, (hippo?.stats.happiness || 0) + happinessBonus),
         });
-        
+
         return { coinsBonus, happinessBonus };
     }, [hippo?.stats, addCoins, updateStats]);
 
@@ -287,7 +283,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const updated = {
                 ...prev,
                 sleepCount: prev.sleepCount + 1,
-                coins: prev.coins + 3
             };
             Promise.all([
                 storage.setItem('hippoSleepCount', updated.sleepCount.toString()),
@@ -309,7 +304,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
             const updated = {
                 ...prev,
                 waterCount: prev.waterCount + 1,
-                coins: prev.coins + 4
             };
             Promise.all([
                 storage.setItem('hippoWaterCount', updated.waterCount.toString()),
@@ -320,7 +314,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         updateStats({
             thirst: Math.min(100, (hippo?.stats.thirst || 0) + 30),
             health: Math.min(100, (hippo?.stats.health || 0) + 10),
-            happiness: Math.min(100, (hippo?.stats.happiness || 0) + 15),
         });
     }, [hippo?.stats, updateStats]);
 

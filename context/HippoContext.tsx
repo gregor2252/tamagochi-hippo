@@ -507,9 +507,8 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const resetHippo = useCallback(async () => {
-        setHippo(initialHippo);
-        setUnlockedItems(new Set());
         try {
+            // Сначала очищаем хранилище
             await Promise.all([
                 storage.removeItem('hippoStats'),
                 storage.removeItem('hippoName'),
@@ -525,8 +524,20 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
                 storage.removeItem('hippoSleepCount'),
                 storage.removeItem('hippoWaterCount'),
             ]);
+
+            // Затем сбрасываем состояние
+            setHippo(initialHippo);
+            setUnlockedItems(new Set());
+
+            // Важно: перезагружаем данные для синхронизации
+            setIsLoading(true);
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 100);
+
         } catch (error) {
             console.error('Failed to reset hippo:', error);
+            throw error; // Пробрасываем ошибку дальше
         }
     }, []);
 
@@ -536,10 +547,10 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         updateStats,
         feed,
         clean,
-        play, // Возвращает boolean
+        play,
         sleep,
         giveWater,
-        resetHippo,
+        resetHippo, // Теперь функция будет работать правильно
         hasCompletedOnboarding,
         completeOnboarding,
         buyItem,
@@ -547,7 +558,6 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         unequipItem,
         addCoins,
         getAvailableItems,
-        // completeGame не добавляем в тип HippoContextType, поэтому уберем
     };
 
     if (isLoading) {

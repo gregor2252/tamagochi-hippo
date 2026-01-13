@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function StatsScreen() {
-    const { hippo, getAvailableItems } = useHippo();
+    const { hippo, getAvailableItems, resetHippo } = useHippo(); // Добавляем resetHippo из контекста
     const router = useRouter();
 
     const handleResetHippo = () => {
@@ -22,38 +22,8 @@ export default function StatsScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            // Для веба - очищаем localStorage
-                            if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-                                localStorage.clear();
-                            }
-
-                            // Для телефона - очищаем через storage API
-                            const keysToRemove = [
-                                'hippoName',
-                                'hippoGender',
-                                'hippoAge',
-                                'hippoStats',
-                                'hasCreatedHippo',
-                                'hippoOutfit',
-                                'hippoCoins',
-                                'unlockedItems',
-                                'hippoFeedCount',
-                                'hippoCleanCount',
-                                'hippoPlayCount',
-                                'hippoSleepCount',
-                                'hippoWaterCount',
-                            ];
-
-                            for (const key of keysToRemove) {
-                                try {
-                                    await storage.removeItem(key);
-                                } catch (e) {
-                                    // Игнорируем ошибки для отдельных ключей
-                                }
-                            }
-                            
-                            // Перенаправляем на онбординг
-                            router.replace('/onboarding');
+                            await resetHippo();
+                            router.replace("/onboarding");
                         } catch (error) {
                             console.error('Reset error:', error);
                             Alert.alert('Ошибка', 'Не удалось сбросить данные');

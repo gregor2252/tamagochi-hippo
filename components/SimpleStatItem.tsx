@@ -77,10 +77,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         opacity: 0.7,
         marginBottom: 2,
+        fontFamily: 'ComicSans',
     },
     value: {
         fontSize: 18,
         fontWeight: 'bold',
+        fontFamily: 'ComicSans',
     },
     progressContainer: {
         alignItems: 'flex-end',
@@ -101,5 +103,6 @@ const styles = StyleSheet.create({
     progressText: {
         fontSize: 12,
         opacity: 0.7,
+        fontFamily: 'ComicSans',
     },
 });

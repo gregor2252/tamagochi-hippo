@@ -23,6 +23,12 @@ const bubbleImages = [
     require('@/models/icons/games/bubbles/bubble6.png'),
 ];
 
+// Импорты сердечек
+const redHeart = require('@/models/icons/games/hearts/red_heart.png');
+const grayHeart = require('@/models/icons/games/hearts/grey_heart.png');
+const restartIcon = require('@/models/icons/games/restart.png');
+const homeIcon = require('@/models/icons/games/home.png');
+
 interface Bubble {
     id: number;
     x: number;
@@ -171,15 +177,11 @@ export default function BubbleGame({ onGameEnd, onClose }: BubbleGameProps) {
                 {/* ЖИЗНИ СЛЕВА */}
                 <View style={styles.livesContainer}>
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <Text
+                        <Image
                             key={i}
-                            style={[
-                                styles.heart,
-                                i >= lives && styles.heartEmpty,
-                            ]}
-                        >
-                            ❤️
-                        </Text>
+                            source={i < lives ? redHeart : grayHeart}
+                            style={styles.heartImage}
+                        />
                     ))}
                 </View>
 
@@ -219,9 +221,9 @@ export default function BubbleGame({ onGameEnd, onClose }: BubbleGameProps) {
 
             {/* GAME AREA */}
             <View style={styles.gameArea}>
-                {bubbles.map((bubble) => (
+                {bubbles.map((bubble, index) => (
                     <TouchableOpacity
-                        key={bubble.id}
+                        key={`${bubble.id}-${index}`}
                         style={[
                             styles.bubble,
                             {
@@ -247,33 +249,68 @@ export default function BubbleGame({ onGameEnd, onClose }: BubbleGameProps) {
             {gameFinished && (
                 <View style={styles.gameOverOverlay}>
                     <View style={styles.gameOverContainer}>
-                        <Text style={styles.gameOverTitle}>🎉 Отлично!</Text>
-                        <Text style={styles.finalScoreText}>{score}</Text>
-                        <Text style={styles.scoreLabel}>очков</Text>
+                        {lives > 0 ? (
+                            <>
+                                <Text style={styles.gameOverTitle}>
+                                    {score >= 50 ? '🌟 Легенда!' : score >= 30 ? '🎓 Умница!' : '👍 Неплохо!'}
+                                </Text>
+                                <Text style={styles.finalScoreText}>{score}</Text>
+                                <Text style={styles.scoreLabel}>очков</Text>
 
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity
-                                style={styles.repeatButton}
-                                onPress={() => {
-                                    setScore(0);
-                                    setTimeLeft(30);
-                                    setLives(3);
-                                    setGameActive(true);
-                                    setGameFinished(false);
-                                    const initialBubbles = Array.from({ length: 8 }, (_, i) => createBubble(i));
-                                    setBubbles(initialBubbles);
-                                }}
-                            >
-                                <Text style={styles.buttonText}>🔁 Повторить</Text>
-                            </TouchableOpacity>
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.iconButton}
+                                        onPress={() => {
+                                            setScore(0);
+                                            setTimeLeft(30);
+                                            setLives(3);
+                                            setGameActive(true);
+                                            setGameFinished(false);
+                                            const initialBubbles = Array.from({ length: 8 }, (_, i) => createBubble(i));
+                                            setBubbles(initialBubbles);
+                                        }}
+                                    >
+                                        <Image source={restartIcon} style={styles.largeIcon} />
+                                    </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.menuButton}
-                                onPress={() => onGameEnd(score)}
-                            >
-                                <Text style={styles.buttonText}>🏠 В меню</Text>
-                            </TouchableOpacity>
-                        </View>
+                                    <TouchableOpacity
+                                        style={styles.iconButton}
+                                        onPress={() => onGameEnd(score)}
+                                    >
+                                        <Image source={homeIcon} style={styles.largeIcon} />
+                                    </TouchableOpacity>
+                                </View>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.gameOverTitle}>😢 Проиграл!</Text>
+                                <Text style={styles.loseMessage}>Сердца закончились</Text>
+
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.iconButton}
+                                        onPress={() => {
+                                            setScore(0);
+                                            setTimeLeft(30);
+                                            setLives(3);
+                                            setGameActive(true);
+                                            setGameFinished(false);
+                                            const initialBubbles = Array.from({ length: 8 }, (_, i) => createBubble(i));
+                                            setBubbles(initialBubbles);
+                                        }}
+                                    >
+                                        <Image source={restartIcon} style={styles.largeIcon} />
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={styles.iconButton}
+                                        onPress={() => onGameEnd(0)}
+                                    >
+                                        <Image source={homeIcon} style={styles.largeIcon} />
+                                    </TouchableOpacity>
+                                </View>
+                            </>
+                        )}
                     </View>
                 </View>
             )}
@@ -301,13 +338,12 @@ const styles = StyleSheet.create({
     },
     livesContainer: {
         flexDirection: 'row',
-        gap: 4,
+        gap: 8,
     },
-    heart: {
-        fontSize: 24,
-    },
-    heartEmpty: {
-        opacity: 0.3,
+    heartImage: {
+        width: 28,
+        height: 28,
+        resizeMode: 'contain',
     },
     timerContainer: {
         alignItems: 'center',
@@ -320,11 +356,13 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
+        fontFamily: 'ComicSans',
     },
     timerLabel: {
         fontSize: 12,
         color: '#fff',
         marginTop: 2,
+        fontFamily: 'ComicSans',
     },
     scoreContainer: {
         alignItems: 'center',
@@ -337,11 +375,13 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         color: '#FFD700',
+        fontFamily: 'ComicSans',
     },
     scoreLabel: {
         fontSize: 12,
         color: '#fff',
         marginTop: 2,
+        fontFamily: 'ComicSans',
     },
     closeButton: {
         width: 36,
@@ -396,36 +436,38 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 16,
         color: '#4A90E2',
+        fontFamily: 'ComicSans',
+    },
+    loseMessage: {
+        fontSize: 18,
+        color: '#E74C3C',
+        marginBottom: 16,
+        fontWeight: '600',
+        fontFamily: 'ComicSans',
     },
     finalScoreText: {
         fontSize: 56,
         fontWeight: 'bold',
         color: '#FFD700',
         marginBottom: 4,
+        fontFamily: 'ComicSans',
     },
     buttonContainer: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 30,
         marginTop: 24,
-        width: '100%',
+        justifyContent: 'center',
     },
-    repeatButton: {
-        flex: 1,
-        backgroundColor: '#4CAF50',
-        paddingVertical: 14,
-        borderRadius: 12,
+    iconButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    menuButton: {
-        flex: 1,
-        backgroundColor: '#4A90E2',
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
+    largeIcon: {
+        width: 70,
+        height: 70,
+        resizeMode: 'contain',
     },
 });

@@ -33,7 +33,23 @@ const bunnyEntertainment = require('@/models/baby/bunny/entertainment/entertainm
 const bunnySleep = require('@/models/baby/bunny/sleep/sleep.png');
 const bunnyWater = require('@/models/baby/bunny/water/water.png');
 
-// Костюмы для baby - WATER_COSTUME
+// Костюмы для parent - DINO
+const parentDinoDef = require('@/models/parent/dino/default.png');
+const parentDinoHunger = require('@/models/parent/dino/hunger/hunger.png');
+const parentDinoBath = require('@/models/parent/dino/bath/bath.png');
+const parentDinoEntertainment = require('@/models/parent/dino/entertainment/entertainment.png');
+const parentDinoSleep = require('@/models/parent/dino/sleep/sleep.png');
+const parentDinoWater = require('@/models/parent/dino/water/water.png');
+
+// Костюмы для parent - DUCK
+const parentDuckDef = require('@/models/parent/duck/default.png');
+const parentDuckHunger = require('@/models/parent/duck/hunger/hunger.png');
+const parentDuckBath = require('@/models/parent/duck/bath/bath.png');
+const parentDuckEntertainment = require('@/models/parent/duck/entertainment/entertainment.png');
+const parentDuckSleep = require('@/models/parent/duck/sleep/sleep.png');
+const parentDuckWater = require('@/models/parent/duck/water/water.png');
+
+// Костюмы для baby - WATER
 const waterDef = require('@/models/baby/water_costume/default.png');
 const waterHunger = require('@/models/baby/water_costume/hunger/hunger.png');
 const waterBath = require('@/models/baby/water_costume/bath/bath.png');
@@ -52,36 +68,61 @@ interface HippoViewProps {
 const getMoodImage = (mood: string, age: string, costume?: string) => {
     const isParent = age === 'parent';
     
-    // Если есть костюм и это ребенок, используем спрайты костюма
-    if (costume && !isParent) {
-        switch (costume) {
-            case 'costume_dino':
-                switch (mood) {
-                    case 'hunger': return dinoHunger;
-                    case 'bath': return dinoBath;
-                    case 'entertainment': return dinoEntertainment;
-                    case 'sleep': return dinoSleep;
-                    case 'water': return dinoWater;
-                    default: return dinoDef;
-                }
-            case 'costume_bunny':
-                switch (mood) {
-                    case 'hunger': return bunnyHunger;
-                    case 'bath': return bunnyBath;
-                    case 'entertainment': return bunnyEntertainment;
-                    case 'sleep': return bunnySleep;
-                    case 'water': return bunnyWater;
-                    default: return bunnyDef;
-                }
-            case 'costume_water':
-                switch (mood) {
-                    case 'hunger': return waterHunger;
-                    case 'bath': return waterBath;
-                    case 'entertainment': return waterEntertainment;
-                    case 'sleep': return waterSleep;
-                    case 'water': return waterWaterState;
-                    default: return waterDef;
-                }
+    // Если есть костюм, используем спрайты костюма
+    if (costume) {
+        if (isParent) {
+            // Костюмы для взрослого
+            switch (costume) {
+                case 'costume_dino':
+                    switch (mood) {
+                        case 'hunger': return parentDinoHunger;
+                        case 'bath': return parentDinoBath;
+                        case 'entertainment': return parentDinoEntertainment;
+                        case 'sleep': return parentDinoSleep;
+                        case 'water': return parentDinoWater;
+                        default: return parentDinoDef;
+                    }
+                case 'costume_duck':
+                    switch (mood) {
+                        case 'hunger': return parentDuckHunger;
+                        case 'bath': return parentDuckBath;
+                        case 'entertainment': return parentDuckEntertainment;
+                        case 'sleep': return parentDuckSleep;
+                        case 'water': return parentDuckWater;
+                        default: return parentDuckDef;
+                    }
+            }
+        } else {
+            // Костюмы для ребенка
+            switch (costume) {
+                case 'costume_shark':
+                    switch (mood) {
+                        case 'hunger': return dinoHunger;
+                        case 'bath': return dinoBath;
+                        case 'entertainment': return dinoEntertainment;
+                        case 'sleep': return dinoSleep;
+                        case 'water': return dinoWater;
+                        default: return dinoDef;
+                    }
+                case 'costume_bunny':
+                    switch (mood) {
+                        case 'hunger': return bunnyHunger;
+                        case 'bath': return bunnyBath;
+                        case 'entertainment': return bunnyEntertainment;
+                        case 'sleep': return bunnySleep;
+                        case 'water': return bunnyWater;
+                        default: return bunnyDef;
+                    }
+                case 'costume_water':
+                    switch (mood) {
+                        case 'hunger': return waterHunger;
+                        case 'bath': return waterBath;
+                        case 'entertainment': return waterEntertainment;
+                        case 'sleep': return waterSleep;
+                        case 'water': return waterWaterState;
+                        default: return waterDef;
+                    }
+            }
         }
     }
     
@@ -122,6 +163,8 @@ export default function HippoView({
 }: HippoViewProps) {
     const imageSource = getMoodImage(mood, age, costume);
     const sizeStyle = getSizeStyle(size);
+    
+    console.log('HippoView rendered with costume:', costume, 'age:', age, 'mood:', mood);
 
     return (
         <View style={styles.container}>

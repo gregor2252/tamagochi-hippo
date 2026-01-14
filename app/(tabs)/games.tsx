@@ -3,13 +3,13 @@ import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    View
+  Alert,
+  Image,
+  ImageBackground,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  View
 } from 'react-native';
 // Импорты компонентов
 import EnergyBar from '@/components/mini-games/EnergyBar';
@@ -156,7 +156,7 @@ export default function GamesScreen() {
       >
         {/* ЗАГОЛОВОК */}
         <View style={styles.headerSection}>
-          <ThemedText style={styles.title}>🎮 Мини-игры</ThemedText>
+          <ThemedText style={styles.title}>Мини-игры</ThemedText>
         </View>
 
         {/* ШКАЛА ЭНЕРГИИ */}
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FFFEF0',
+    color: '#FFE4A1',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,

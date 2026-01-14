@@ -2,18 +2,41 @@
 import React, { useEffect, useState } from 'react';
 import {
     Dimensions,
+    Image,
+    ImageBackground,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
+// Импорты
+const cardGameBg = require('@/screens/games/card_game.png');
+const backArrow = require('@/models/icons/games/back_arrow.png');
+const brainIcon = require('@/models/icons/games/brain.png');
+const cardBack = require('@/models/icons/games/cards/back.png');
+const restartIcon = require('@/models/icons/games/restart.png');
+
+// Карточки для игры
+const cardImages = [
+    require('@/models/icons/games/cards/card1 (1).png'),
+    require('@/models/icons/games/cards/card2 (1).png'),
+    require('@/models/icons/games/cards/card3 (1).png'),
+    require('@/models/icons/games/cards/card4 (1).png'),
+    require('@/models/icons/games/cards/card5 (1).png'),
+    require('@/models/icons/games/cards/card6 (1).png'),
+    require('@/models/icons/games/cards/card7 (1).png'),
+    require('@/models/icons/games/cards/card8 (1).png'),
+    require('@/models/icons/games/cards/card9.png'),
+    require('@/models/icons/games/cards/card10.png'),
+];
+
 interface Card {
     id: number;
-    value: string;
-    emoji: string;
+    value: number;
+    imageIndex: number;
     isFlipped: boolean;
     isMatched: boolean;
 }
@@ -71,23 +94,24 @@ export default function MemoryGame({ onGameEnd, onClose }: MemoryGameProps) {
     }, [matches, gameActive]);
 
     const initializeGame = () => {
-        // Выбираем 10 случайных эмодзи
-        const selectedEmojis = [...CARD_EMOJIS]
+        // Создаем пары карточек (10 пар = 20 карт)
+        const cardPairs = []
+        for (let i = 0; i < 10; i++) {
+            cardPairs.push(i, i);
+        }
+        
+        // Перемешиваем
+        const shuffled = cardPairs
             .sort(() => Math.random() - 0.5)
-            .slice(0, 10);
-
-        // Создаем пары карточек
-        const cardPairs = [...selectedEmojis, ...selectedEmojis]
-            .sort(() => Math.random() - 0.5)
-            .map((emoji, index) => ({
+            .map((imageIndex, index) => ({
                 id: index,
-                value: emoji,
-                emoji: emoji,
+                value: imageIndex,
+                imageIndex: imageIndex,
                 isFlipped: false,
                 isMatched: false
             }));
 
-        setCards(cardPairs);
+        setCards(shuffled);
         setMoves(0);
         setMatches(0);
         setTimeLeft(120);
@@ -182,21 +206,25 @@ export default function MemoryGame({ onGameEnd, onClose }: MemoryGameProps) {
     };
 
     return (
-        <View style={styles.container}>
+        <ImageBackground
+            source={cardGameBg}
+            style={styles.container}
+            resizeMode="cover"
+        >
             {/* Шапка игры */}
             <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={onClose}>
+                    <Image source={backArrow} style={styles.backIcon} />
+                </TouchableOpacity>
+
+                <View style={styles.headerCenter}>
+                    <Image source={brainIcon} style={styles.brainIcon} />
+                    <Text style={styles.headerTitle}>Игра на память</Text>
+                </View>
+
                 <View style={styles.statsContainer}>
                     <Text style={styles.statsText}>🕒 {formatTime(timeLeft)}</Text>
                 </View>
-                <View style={styles.statsContainer}>
-                    <Text style={styles.statsText}>👣 Ходы: {moves}</Text>
-                </View>
-                <View style={styles.statsContainer}>
-                    <Text style={styles.statsText}>✅ Пары: {matches}/10</Text>
-                </View>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                    <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
             </View>
 
             {/* Игровое поле 4x5 */}
@@ -211,29 +239,32 @@ export default function MemoryGame({ onGameEnd, onClose }: MemoryGameProps) {
                         ]}
                         onPress={() => handleCardPress(card.id)}
                         disabled={!canFlip || card.isFlipped || card.isMatched || !gameActive}
+                        activeOpacity={1}
                     >
                         {card.isFlipped || card.isMatched ? (
-                            <Text style={styles.cardEmoji}>{card.emoji}</Text>
+                            <Image
+                                source={cardImages[card.imageIndex]}
+                                style={styles.cardImage}
+                                resizeMode="contain"
+                            />
                         ) : (
-                            <Text style={styles.cardBackText}>?</Text>
+                            <Image
+                                source={cardBack}
+                                style={styles.cardImage}
+                                resizeMode="contain"
+                            />
                         )}
                     </TouchableOpacity>
                 ))}
             </View>
 
             {/* Инструкции */}
-            <View style={styles.instructions}>
-                <Text style={styles.instructionsTitle}>🎯 Как играть:</Text>
-                <Text style={styles.instruction}>• Находите пары одинаковых карточек</Text>
-                <Text style={styles.instruction}>• На игру даётся 2 минуты</Text>
-                <Text style={styles.instruction}>• Чем меньше ходов и больше времени останется - тем больше очков</Text>
-                <Text style={styles.instruction}>• Нужно найти все 10 пар</Text>
-            </View>
+            {/* Убрали подсказки */}
 
             {/* Управление */}
             <View style={styles.controls}>
-                <TouchableOpacity style={styles.restartButton} onPress={initializeGame}>
-                    <Text style={styles.restartButtonText}>🔄 Начать заново</Text>
+                <TouchableOpacity style={styles.restartIconButton} onPress={initializeGame}>
+                    <Image source={restartIcon} style={styles.restartIconImage} />
                 </TouchableOpacity>
 
                 {!gameActive && (
@@ -275,7 +306,7 @@ export default function MemoryGame({ onGameEnd, onClose }: MemoryGameProps) {
                     </View>
                 </View>
             )}
-        </View>
+        </ImageBackground>
     );
 }
 
@@ -289,36 +320,50 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 15,
-        backgroundColor: '#34495E',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
-        flexWrap: 'wrap',
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    backIcon: {
+        width: 24,
+        height: 24,
+        resizeMode: 'contain',
+    },
+    headerCenter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    brainIcon: {
+        width: 32,
+        height: 32,
+        resizeMode: 'contain',
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        fontFamily: 'ComicSans',
     },
     statsContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 15,
-        marginVertical: 4,
     },
     statsText: {
         color: 'white',
         fontSize: 14,
         fontWeight: '600',
-    },
-    closeButton: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 4,
-    },
-    closeButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'ComicSans',
     },
     gameBoard: {
         flexDirection: 'row',
@@ -326,6 +371,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 8,
         gap: 4,
+        flex: 1,
+        marginTop: 320,
     },
     card: {
         width: (width - 40) / 5 - 4,
@@ -339,9 +386,11 @@ const styles = StyleSheet.create({
         shadowRadius: 1,
         elevation: 2,
         marginBottom: 2,
+        borderWidth: 0,
+        outline: 'none',
     },
     cardBack: {
-        backgroundColor: '#3498DB',
+        backgroundColor: 'transparent',
     },
     cardFlipped: {
         backgroundColor: '#ECF0F1',
@@ -350,50 +399,29 @@ const styles = StyleSheet.create({
     cardMatched: {
         backgroundColor: '#2ECC71',
     },
-    cardEmoji: {
-        fontSize: 20,
-    },
-    cardBackText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    instructions: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        padding: 12,
-        margin: 10,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-    },
-    instructionsTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#FFD54F',
-        marginBottom: 6,
-    },
-    instruction: {
-        fontSize: 11,
-        color: '#E0E0E0',
-        marginBottom: 3,
-        marginLeft: 8,
+    cardImage: {
+        width: '90%',
+        height: '90%',
     },
     controls: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingHorizontal: 20,
         paddingBottom: 15,
+        gap: 20,
     },
-    restartButton: {
-        backgroundColor: '#E74C3C',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        borderRadius: 20,
+    restartIconButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    restartButtonText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: '600',
+    restartIconImage: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
     },
     finishButton: {
         backgroundColor: '#9B59B6',
@@ -427,6 +455,7 @@ const styles = StyleSheet.create({
         color: '#9B59B6',
         marginBottom: 10,
         textAlign: 'center',
+        fontFamily: 'ComicSans',
     },
     finalStats: {
         marginBottom: 10,
@@ -437,12 +466,14 @@ const styles = StyleSheet.create({
         color: '#2C3E50',
         marginBottom: 3,
         fontWeight: '500',
+        fontFamily: 'ComicSans',
     },
     finalScore: {
         fontSize: 16,
         color: '#E74C3C',
         marginBottom: 6,
         fontWeight: 'bold',
+        fontFamily: 'ComicSans',
     },
     rewardText: {
         fontSize: 12,
@@ -450,6 +481,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         textAlign: 'center',
         fontWeight: '600',
+        fontFamily: 'ComicSans',
     },
     finalButtons: {
         flexDirection: 'row',

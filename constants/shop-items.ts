@@ -53,6 +53,17 @@ export const SHOP_ITEMS: ClothingItem[] = [
         rarity: 'rare',
         unlocked: false
     },
+    {
+        id: 'hat_6',
+        name: 'Заячьи ушки',
+        description: 'Милые заячьи ушки',
+        price: 300,
+        category: 'head',
+        icon: require('@/models/icons/shop/costumes/bunny_hat.png'),
+        rarity: 'common',
+        unlocked: false,
+        ageRestriction: 'child'
+    },
 
     // UPPER ITEMS
     {
@@ -104,6 +115,17 @@ export const SHOP_ITEMS: ClothingItem[] = [
         icon: require('@/models/icons/shop/body.png'),
         rarity: 'rare',
         unlocked: false
+    },
+    {
+        id: 'upper_6',
+        name: 'Боксерские перчатки',
+        description: 'Боксерские перчатки для боевого духа',
+        price: 750,
+        category: 'upper',
+        icon: require('@/models/icons/shop/costumes/boxing.png'),
+        rarity: 'rare',
+        unlocked: false,
+        ageRestriction: 'parent'
     },
 
     // LOWER ITEMS
@@ -212,16 +234,16 @@ export const SHOP_ITEMS: ClothingItem[] = [
 
     // COSTUMES (only for child)
     {
-        id: 'costume_dino',
+        id: 'costume_shark',
         name: 'Акуленок',
         description: 'Костюм акуленка для маленького бегемотика',
         price: 500,
         category: 'costume',
-        icon: require('@/models/icons/shop/costumes/dino.png'),
+        icon: require('@/models/icons/shop/costumes/shark.png'),
         rarity: 'rare',
         unlocked: false,
         ageRestriction: 'child',
-        costume: 'costume_dino'
+        costume: 'costume_shark'
     },
     {
         id: 'costume_bunny',
@@ -246,5 +268,31 @@ export const SHOP_ITEMS: ClothingItem[] = [
         unlocked: false,
         ageRestriction: 'child',
         costume: 'costume_water'
+    },
+
+    // COSTUMES (only for parent)
+    {
+        id: 'costume_dino',
+        name: 'Динозавр',
+        description: 'Костюм динозавра для взрослого бегемотика',
+        price: 500,
+        category: 'costume',
+        icon: require('@/models/icons/shop/costumes/dino.png'),
+        rarity: 'rare',
+        unlocked: false,
+        ageRestriction: 'parent',
+        costume: 'costume_dino'
+    },
+    {
+        id: 'costume_duck',
+        name: 'Утка',
+        description: 'Костюм утки для взрослого бегемотика',
+        price: 500,
+        category: 'costume',
+        icon: require('@/models/icons/shop/costumes/duck.png'),
+        rarity: 'rare',
+        unlocked: false,
+        ageRestriction: 'parent',
+        costume: 'costume_duck'
     }
 ];

@@ -357,26 +357,59 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
         const item = SHOP_ITEMS.find(i => i.id === itemId);
         if (!item || !hippo) return false;
         if (hippo.coins >= item.price) {
+            console.log('buyItem called with:', itemId, 'category:', item.category);
+            // Все изменения в одном setHippo вызове
             setHippo(prev => {
                 if (!prev) return prev;
+                
+                // Вычитаем монеты
+                const updatedCoins = prev.coins - item.price;
+                
+                // Подготавливаем новый outfit
+                const updatedOutfit = { ...prev.outfit };
+                
+                // If it's a costume, remove other items
+                if (item.category === 'costume') {
+                    updatedOutfit.head = undefined;
+                    updatedOutfit.upper = undefined;
+                    updatedOutfit.lower = undefined;
+                    updatedOutfit.feet = undefined;
+                    updatedOutfit.costume = itemId;
+                    console.log('Setting costume to:', itemId);
+                } 
+                // If it's a regular item, remove costume
+                else if (['head', 'upper', 'lower', 'feet'].includes(item.category)) {
+                    updatedOutfit.costume = undefined;
+                    updatedOutfit[item.category as keyof HippoOutfit] = itemId;
+                    console.log('Setting', item.category, 'to:', itemId);
+                }
+                
                 const updated = {
                     ...prev,
-                    coins: prev.coins - item.price
+                    coins: updatedCoins,
+                    outfit: updatedOutfit
                 };
-                storage.setItem('hippoCoins', updated.coins.toString()).catch(
+                
+                console.log('Updated outfit:', updatedOutfit);
+                
+                // Сохраняем оба изменения
+                storage.setItem('hippoCoins', updatedCoins.toString()).catch(
                     error => console.error('Failed to save coins:', error)
                 );
+                storage.setItem('hippoOutfit', JSON.stringify(updatedOutfit)).catch(
+                    error => console.error('Failed to save outfit:', error)
+                );
+                
                 return updated;
             });
+            
+            // Добавляем в разблокированные предметы
             const newUnlockedItems = new Set([...unlockedItems, itemId]);
             setUnlockedItems(newUnlockedItems);
             storage.setItem('unlockedItems', JSON.stringify(Array.from(newUnlockedItems))).catch(
                 error => console.error('Failed to save unlocked items:', error)
             );
-            const currentOutfit = hippo.outfit || {};
-            if (!currentOutfit[item.category as keyof HippoOutfit]) {
-                equipItem(itemId);
-            }
+            
             return true;
         }
         return false;
@@ -384,13 +417,31 @@ export function HippoProvider({ children }: { children: React.ReactNode }) {
 
     const equipItem = useCallback((itemId: string) => {
         const item = SHOP_ITEMS.find(i => i.id === itemId);
-        if (!item || !hippo || !unlockedItems.has(itemId)) return;
+        if (!item || !hippo) return;
+        
+        // Check if item is unlocked (for manual equipping from wardrobe)
+        if (!unlockedItems.has(itemId)) return;
+        
         setHippo(prev => {
             if (!prev) return prev;
             const updatedOutfit = {
                 ...prev.outfit,
-                [item.category]: itemId
             };
+            
+            // If equipping costume, remove all other items
+            if (item.category === 'costume') {
+                updatedOutfit.head = undefined;
+                updatedOutfit.upper = undefined;
+                updatedOutfit.lower = undefined;
+                updatedOutfit.feet = undefined;
+                updatedOutfit.costume = itemId;
+            } 
+            // If equipping head/upper/lower/feet, ALWAYS remove costume
+            else if (['head', 'upper', 'lower', 'feet'].includes(item.category)) {
+                updatedOutfit.costume = undefined;
+                updatedOutfit[item.category as keyof HippoOutfit] = itemId;
+            }
+            
             const updated = {
                 ...prev,
                 outfit: updatedOutfit

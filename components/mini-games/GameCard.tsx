@@ -1,15 +1,16 @@
 import { ThemedText } from '@/components/themed-text';
 import React, { useRef } from 'react';
 import {
-    Animated,
-    Image,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  Animated,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const greenButton = require('@/models/icons/buttons/arrows/green_button.png');
 const greyButton = require('@/models/icons/buttons/arrows/grey_button.png');
+const energyIcon = require('@/models/icons/stats/energy.png');
 
 interface GameCardProps {
   title: string;
@@ -77,14 +78,17 @@ export default function GameCard({
 
         {/* Стоимость энергии */}
         <View style={styles.costContainer}>
-          <ThemedText
-            style={[
-              styles.costText,
-              !canPlay && styles.costTextDisabled,
-            ]}
-          >
-            ⚡ {energyCost} энергии
-          </ThemedText>
+          <View style={styles.costContent}>
+            <Image source={energyIcon} style={styles.costIcon} />
+            <ThemedText
+              style={[
+                styles.costText,
+                !canPlay && styles.costTextDisabled,
+              ]}
+            >
+              {energyCost} энергии
+            </ThemedText>
+          </View>
         </View>
 
         {/* Кнопка Играть */}
@@ -156,17 +160,30 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'ComicSans',
   },
   costContainer: {
     marginBottom: 16,
+  },
+  costContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  costIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
   costText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#4CD964',
+    fontFamily: 'ComicSans',
   },
   costTextDisabled: {
     color: '#FF3B30',
+    fontFamily: 'ComicSans',
   },
   playButton: {
     width: 120,

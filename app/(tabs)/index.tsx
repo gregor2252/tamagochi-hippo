@@ -21,6 +21,7 @@ const bathButtonImg = require('@/assets/images/bath_button.png');
 const playButtonImg = require('@/assets/images/talk_button.png');
 const sleepButtonImg = require('@/assets/images/sleep_button.png');
 const waterButtonImg = require('@/assets/images/water_button.png');
+const moneyIcon = require('@/models/icons/stats/money.png');
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -111,7 +112,8 @@ export default function HomeScreen() {
 
         {/* КОНТЕЙНЕР С МОНЕТАМИ */}
         <View style={styles.coinContainer}>
-          <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
+          <Image source={moneyIcon} style={styles.coinIcon} />
+          <ThemedText style={styles.coinText}>{hippo?.coins || 0}</ThemedText>
         </View>
 
         <View style={styles.contentWrapper}>
@@ -282,6 +284,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 16,
     zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  coinIcon: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
   },
   coinText: {
     fontSize: 12,

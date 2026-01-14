@@ -3,7 +3,7 @@ import HippoView from '@/components/HippoView';
 import { ThemedText } from '@/components/themed-text';
 import { useHippo } from '@/context/HippoContext';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -22,14 +22,20 @@ const categories = [
   { id: 'upper', name: 'Верх', emoji: '👕', color: '#A8D5FF', icon: require('@/models/icons/shop/body.png') },
   { id: 'lower', name: 'Низ', emoji: '👖', color: '#B5E8A8', icon: require('@/models/icons/shop/pants.png') },
   { id: 'feet', name: 'Обувь', emoji: '👟', color: '#FFD4A8', icon: require('@/models/icons/shop/shoes.png') },
-  { id: 'costume', name: 'Костюмы', emoji: '🧸', color: '#FFE8A8', icon: require('@/models/icons/shop/costumes/dino.png') },
+  { id: 'costume', name: 'Костюмы', emoji: '🧸', color: '#FFE8A8', icon: require('@/models/icons/shop/costumes.png') },
 ];
+
+const moneyIcon = require('@/models/icons/stats/money.png');
 
 export default function ShopScreen() {
   const router = useRouter();
   const { hippo, buyItem, equipItem, unequipItem, getAvailableItems } = useHippo();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
+
+  useEffect(() => {
+    console.log('ShopScreen: hippo updated:', hippo?.outfit);
+  }, [hippo?.outfit]);
 
   const currentCategory = categories.find(c => c.id === selectedCategory);
   let items = selectedCategory ? getAvailableItems().filter(item => item.category === selectedCategory) : [];
@@ -84,10 +90,9 @@ export default function ShopScreen() {
       return;
     }
 
-    if (buyItem(currentItem.id)) {
-      // Автоматически надеваем после покупки
-      equipItem(currentItem.id);
-    }
+    console.log('Buying item:', currentItem.id, 'Category:', currentItem.category);
+    buyItem(currentItem.id);
+    console.log('After buyItem, hippo.outfit:', hippo?.outfit);
   };
 
   const handleEquipItem = () => {
@@ -114,18 +119,22 @@ export default function ShopScreen() {
 
         {/* МОНЕТЫ СВЕРХУ */}
         <View style={styles.coinContainer}>
-          <ThemedText style={styles.coinText}>💰 {hippo?.coins || 0}</ThemedText>
+          <Image source={moneyIcon} style={styles.coinIcon} />
+          <ThemedText style={styles.coinText}>{hippo?.coins || 0}</ThemedText>
         </View>
 
         {/* БЕГЕМОТИК В ЦЕНТРЕ */}
         <View style={styles.hippoSection}>
           {hippo && (
-            <HippoView 
-              mood="default" 
-              size="medium" 
-              age={(hippo.age as unknown as 'child' | 'parent') || 'child'}
-              costume={hippo.outfit?.costume}
-            />
+            <>
+              {console.log('Shop screen rendering HippoView with outfit:', hippo.outfit)}
+              <HippoView 
+                mood="default" 
+                size="medium" 
+                age={(hippo.age as unknown as 'child' | 'parent') || 'child'}
+                costume={hippo.outfit?.costume}
+              />
+            </>
           )}
         </View>
 
@@ -136,7 +145,6 @@ export default function ShopScreen() {
               key={category.id}
               style={[
                 styles.categoryButton,
-                { backgroundColor: category.color },
                 selectedCategory === category.id && styles.categoryButtonSelected,
               ]}
               onPress={() => handleCategoryPress(category.id)}
@@ -192,7 +200,8 @@ export default function ShopScreen() {
                 </View>
               ) : (
                 <View style={[styles.statusBadge, styles.priceBadge]}>
-                  <ThemedText style={styles.priceText}>💰 {currentItem?.price}</ThemedText>
+                  <Image source={moneyIcon} style={styles.priceIcon} />
+                  <ThemedText style={styles.priceText}>{currentItem?.price}</ThemedText>
                 </View>
               )}
             </View>
@@ -299,6 +308,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  coinIcon: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
   },
   coinText: {
     fontSize: 14,
@@ -331,6 +348,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   categoryButtonSelected: {
     transform: [{ scale: 1.1 }],
@@ -338,11 +357,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   categoryEmoji: {
-    fontSize: 28,
+    fontSize: 8,
   },
   categoryIcon: {
-    width: 32,
-    height: 32,
+    width: 64,
+    height: 64,
   },
   // ===== МОДАЛЬНОЕ ОКНО =====
   modalOverlay: {
@@ -418,6 +437,12 @@ const styles = StyleSheet.create({
   },
   priceBadge: {
     backgroundColor: '#FFB74D',
+  },
+  priceIcon: {
+    width: 14,
+    height: 14,
+    resizeMode: 'contain',
+    marginRight: 4,
   },
   statusText: {
     fontSize: 14,

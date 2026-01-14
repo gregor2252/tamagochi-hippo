@@ -5,7 +5,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useHippo } from '@/context/HippoContext';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+const moneyIcon = require('@/models/icons/stats/money.png');
+const energyIcon = require('@/models/icons/stats/energy.png');
 
 export default function StatsScreen() {
     const { hippo, getAvailableItems, resetHippo } = useHippo(); // Добавляем resetHippo из контекста
@@ -119,7 +122,7 @@ export default function StatsScreen() {
 
                     <View style={styles.summaryGrid}>
                         <View style={styles.summaryItem}>
-                            <ThemedText style={styles.summaryIcon}>💰</ThemedText>
+                            <Image source={moneyIcon} style={styles.summaryIconImage} />
                             <ThemedText style={styles.summaryLabel}>Монеты</ThemedText>
                             <ThemedText style={styles.summaryValue}>{hippo.coins}</ThemedText>
                             <View style={styles.miniProgress}>
@@ -412,6 +415,12 @@ const styles = StyleSheet.create({
     summaryIcon: {
         fontSize: 20,
         marginBottom: 4,
+    },
+    summaryIconImage: {
+        width: 20,
+        height: 20,
+        marginBottom: 4,
+        resizeMode: 'contain',
     },
     summaryLabel: {
         fontSize: 12,

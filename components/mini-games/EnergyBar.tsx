@@ -1,10 +1,13 @@
 import { ThemedText } from '@/components/themed-text';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    StyleSheet,
-    View,
+  Animated,
+  Image,
+  StyleSheet,
+  View,
 } from 'react-native';
+
+const energyIcon = require('@/models/icons/stats/energy.png');
 
 interface EnergyBarProps {
   current: number;
@@ -32,7 +35,7 @@ export default function EnergyBar({ current, max }: EnergyBarProps) {
   return (
     <View style={styles.container}>
       {/* Иконка слева */}
-      <ThemedText style={styles.icon}>⚡</ThemedText>
+      <Image source={energyIcon} style={styles.icon} />
 
       {/* Шкала энергии */}
       <View style={styles.barContainer}>
@@ -78,6 +81,9 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 20,
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
   },
   barContainer: {
     flex: 1,
@@ -98,5 +104,6 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     minWidth: 50,
     textAlign: 'right',
+    fontFamily: 'ComicSans',
   },
 });
